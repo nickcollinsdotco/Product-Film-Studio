@@ -1,0 +1,163 @@
+
+◆  Rendering b3-helpers → C:\Users\nfbco\Documents\GITHUB\Product-Film-Studio\.scratch\q1-renderer-spike\out\b3-helpers.mp4
+   30fps · draft · auto workers (16 cores detected)
+   GPU: browser GPU (auto-detect)
+
+[?25l│
+◒  Checking browser[1G[J◇  Browser: cache
+[?25h
+  Lint: 0 error(s), 1 warning(s) — run with --lint-verbose for full output.
+  Continuing render despite lint issues. Use --strict to block errors.
+
+[INFO] [Render] Pipeline started {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","platform":"win32","arch":"x64","nodeVersion":"v24.18.0","fps":{"num":30,"den":1},"format":"mp4","quality":"draft","browserGpuMode":"auto","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":120000,"pageNavigationTimeout":60000,"playerReadyTimeout":45000}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"pipeline","status":"checkpoint","elapsedMs":3,"message":"started","format":"mp4","quality":"draft","browserGpuMode":"auto","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"playerReadyTimeoutMs":45000,"requestedWorkers":"auto"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"compile","status":"start","elapsedMs":4,"needsAlpha":false}
+  █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Compiling composition
+@hf-progress {"code":"compile","pct":5}
+[INFO] [Compiler] Fetched 11 font face(s) for "Inter" from Google Fonts (cached to C:\Users\nfbco\.cache\hyperframes\fonts\inter)
+[INFO] [Compiler] Injected deterministic @font-face rules for 1 requested font families
+[INFO] [Compiler] Inlined CDN script: https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js
+[INFO] [Render] Fast capture: composition uses a CSS 3D rendering context (perspective / preserve-3d / backface-visibility) — disabling drawElementImage for this render. Capture uses the platform's baseline route. {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] Compiled composition metadata {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","entryFile":"index.html","staticDuration":5,"width":1920,"height":1080,"videoCount":0,"audioCount":0,"renderModeHints":{"recommendScreenshot":false,"reasons":[]}}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"compile","status":"end","elapsedMs":197,"durationMs":193,"needsAlpha":false}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"compile","status":"checkpoint","elapsedMs":197,"message":"composition metadata resolved","width":1920,"height":1080,"videoCount":0,"audioCount":0,"imageCount":0,"deviceScaleFactor":1,"forceScreenshot":false,"compositionHash":"2602efad8d88cbdc"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"browser_probe","status":"start","elapsedMs":197,"forceScreenshot":false,"stagePhase":"calibrating"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"browser_probe","status":"end","elapsedMs":229,"durationMs":31,"forceScreenshot":false,"stagePhase":"calibrating"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"browser_probe","status":"checkpoint","elapsedMs":229,"message":"duration resolved","durationSeconds":5,"totalFrames":150,"compositionHash":"2602efad8d88cbdc","beginFrameStalled":false}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"video_extract","status":"start","elapsedMs":229,"videoCount":0}
+  ██░░░░░░░░░░░░░░░░░░░░░░░  10%  Extracting video frames
+@hf-progress {"code":"extract_video","pct":10}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"video_extract","status":"end","elapsedMs":230,"durationMs":1,"videoCount":0}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"video_extract","status":"checkpoint","elapsedMs":230,"message":"frames resolved","videoCount":0,"extractedVideoCount":0,"totalFramesExtracted":0,"maxFramesPerVideo":0,"avgFramesPerExtractedVideo":null,"vfrPreflightCount":null,"vfrPreflightMs":null,"cacheHits":null,"cacheMisses":null,"transientRetries":null,"minVideoFrameCoverageRatio":null,"authoredTimedClipCount":4}
+[INFO] [Render] No HDR sources detected — rendering SDR {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"hdr_detection","status":"checkpoint","elapsedMs":231,"message":"resolved","requestedHdrMode":"auto","effectiveHdr":"sdr","nativeHdrVideoCount":0,"nativeHdrImageCount":0}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"audio_process","status":"start","elapsedMs":231,"audioCount":0}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"audio_process","status":"end","elapsedMs":231,"durationMs":0,"audioCount":0}
+  █████░░░░░░░░░░░░░░░░░░░░  20%  Processing audio tracks
+@hf-progress {"code":"process_audio","pct":20}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"file_server","status":"start","elapsedMs":231,"reused":false}
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Starting frame capture
+@hf-progress {"code":"start_browsers","pct":25}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"file_server","status":"end","elapsedMs":235,"durationMs":4}
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Checking browser GPU
+@hf-progress {"code":"start_browsers","pct":25}
+[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA)" renderer="ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)")
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"capture_calibration","status":"start","elapsedMs":666,"stagePhase":"calibrating","forceScreenshot":false,"totalFrames":150,"framesCompleted":0,"captureMode":"screenshot","captureOperation":"captureScreenshot"}
+[INFO] [Render] Calibration config {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","protocolTimeout":30000,"parentProtocolTimeout":300000,"forceScreenshot":false,"totalFrames":150}
+[INFO] Launching browser for capture calibration... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Measuring capture speed
+@hf-progress {"code":"start_browsers","pct":25}
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[INFO] Initializing calibration session... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto complete (399ms)
+[initSession:screenshot] GSAP proxy flush complete (404ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] pollHfReady complete (525ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (526ms)
+[initSession:screenshot] applyVideoMetadataHints complete (526ms)
+[initSession:screenshot] media + fonts + tailwind ready (527ms)
+[initSession:screenshot] static-frame dedup: 54/54 predicted frame(s) reusable (outcome=verified, runs=2/2, screenshots=26, seeks=27, elapsedMs=1233) (2116ms)
+[INFO] Calibration session ready, capturing test frames... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] Calibration: capturing test frame 1/5... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] Calibration: capturing test frame 2/5... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] Calibration: capturing test frame 3/5... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] Calibration: capturing test frame 4/5... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] Calibration: capturing test frame 5/5... {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] Calibration complete, estimated cost: 56ms/frame (p95) {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"capture_calibration","status":"end","elapsedMs":3811,"durationMs":3145,"stagePhase":"calibrating","forceScreenshot":false,"totalFrames":150,"framesCompleted":0,"captureMode":"screenshot","captureOperation":"captureScreenshot"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"capture_calibration","status":"checkpoint","elapsedMs":3811,"message":"resolved","forceScreenshot":false,"multiplier":1,"p95Ms":56}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"worker_resolution","status":"checkpoint","elapsedMs":3812,"message":"resolved","workerCount":5}
+[INFO] streaming-encode gate {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","enabled":false,"reason":"multi_worker","configFlag":true,"durationCapEnabled":false,"outputFormat":"mp4","workerCount":5,"durationSeconds":5,"maxDurationSeconds":240}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"capture_strategy","status":"checkpoint","elapsedMs":3812,"message":"resolved","workerCount":5,"forceScreenshot":false,"captureBeyondViewport":null,"useStreamingEncode":false,"useLayeredComposite":false,"usePageSideCompositing":false,"hasHdrContent":false,"hasShaderTransitions":false,"isPngSequence":false}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"capture_disk","status":"start","elapsedMs":3812,"stagePhase":"capturing","needsAlpha":false,"workerCount":5,"forceScreenshot":false,"totalFrames":150,"framesCompleted":0,"captureMode":"screenshot","captureOperation":"captureScreenshot"}
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Starting browsers (0/5 ready)
+@hf-progress {"code":"start_browsers","done":0,"total":5,"pct":25}
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto complete (424ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] GSAP proxy flush complete (456ms)
+[initSession:screenshot] page.goto complete (454ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] pollHfReady complete (457ms)
+[initSession:screenshot] GSAP proxy flush complete (488ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (491ms)
+[initSession:screenshot] applyVideoMetadataHints complete (491ms)
+[initSession:screenshot] page.goto complete (481ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] pollHfReady complete (491ms)
+[initSession:screenshot] media + fonts + tailwind ready (494ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (494ms)
+[initSession:screenshot] applyVideoMetadataHints complete (494ms)
+[initSession:screenshot] media + fonts + tailwind ready (499ms)
+[initSession:screenshot] GSAP proxy flush complete (495ms)
+[initSession:screenshot] page.goto complete (491ms)
+[initSession:screenshot] GSAP proxy flush complete (500ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] page.goto complete (528ms)
+[initSession:screenshot] GSAP proxy flush complete (535ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] pollHfReady complete (600ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (602ms)
+[initSession:screenshot] applyVideoMetadataHints complete (602ms)
+[initSession:screenshot] media + fonts + tailwind ready (605ms)
+[initSession:screenshot] pollHfReady complete (639ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (640ms)
+[initSession:screenshot] applyVideoMetadataHints complete (640ms)
+[initSession:screenshot] media + fonts + tailwind ready (642ms)
+[initSession:screenshot] pollHfReady complete (680ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (683ms)
+[initSession:screenshot] applyVideoMetadataHints complete (683ms)
+[initSession:screenshot] media + fonts + tailwind ready (686ms)
+[initSession:screenshot] static-frame dedup: 54/54 predicted frame(s) reusable (outcome=verified, runs=2/2, screenshots=26, seeks=27, elapsedMs=1789) (2956ms)
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Starting browsers (1/5 ready)
+@hf-progress {"code":"start_browsers","done":1,"total":5,"pct":25}
+[initSession:screenshot] static-frame dedup: 54/54 predicted frame(s) reusable (outcome=verified, runs=2/2, screenshots=26, seeks=27, elapsedMs=1814) (2989ms)
+[initSession:screenshot] static-frame dedup: 54/54 predicted frame(s) reusable (outcome=verified, runs=2/2, screenshots=26, seeks=27, elapsedMs=1859) (3036ms)
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Capturing frame 1/150 (5 workers)
+@hf-progress {"code":"capture","done":1,"total":150,"pct":25}
+[initSession:screenshot] static-frame dedup: 54/54 predicted frame(s) reusable (outcome=verified, runs=2/2, screenshots=26, seeks=27, elapsedMs=1774) (3069ms)
+[initSession:screenshot] static-frame dedup: 54/54 predicted frame(s) reusable (outcome=verified, runs=2/2, screenshots=26, seeks=27, elapsedMs=1779) (3183ms)
+  ██████████░░░░░░░░░░░░░░░  42%  Capturing frame 55/150 (5 workers)
+@hf-progress {"code":"capture","done":55,"total":150,"pct":42}
+  ███████████░░░░░░░░░░░░░░  47%  Capturing frame 72/150 (5 workers)
+@hf-progress {"code":"capture","done":72,"total":150,"pct":47}
+  ████████████░░░░░░░░░░░░░  51%  Capturing frame 88/150 (5 workers)
+@hf-progress {"code":"capture","done":88,"total":150,"pct":51}
+  ██████████████░░░░░░░░░░░  56%  Capturing frame 104/150 (5 workers)
+@hf-progress {"code":"capture","done":104,"total":150,"pct":56}
+  ████████████████░░░░░░░░░  64%  Capturing frame 129/150 (5 workers)
+@hf-progress {"code":"capture","done":129,"total":150,"pct":64}
+[static-dedup] reused 28/30 frame(s) (93%), est. ~1764ms saved (avg 63ms/frame)
+  ████████████████░░░░░░░░░  66%  Capturing frame 138/150 (5 workers)
+@hf-progress {"code":"capture","done":138,"total":150,"pct":66}
+  █████████████████░░░░░░░░  69%  Capturing frame 146/150 (5 workers)
+@hf-progress {"code":"capture","done":146,"total":150,"pct":69}
+  █████████████████░░░░░░░░  70%  Capturing frame 150/150 (5 workers)
+@hf-progress {"code":"capture","done":150,"total":150,"pct":70}
+[static-dedup] reused 13/30 frame(s) (43%), est. ~884ms saved (avg 68ms/frame)
+[static-dedup] reused 12/30 frame(s) (40%), est. ~888ms saved (avg 74ms/frame)
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"capture_disk","status":"end","elapsedMs":11189,"durationMs":7377,"stagePhase":"capturing","needsAlpha":false,"workerCount":5,"forceScreenshot":false,"totalFrames":150,"framesCompleted":150,"captureMode":"screenshot","captureOperation":"encode"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"encode","status":"start","elapsedMs":11189,"stagePhase":"capturing","hasAudio":false,"isPngSequence":false,"isGif":false,"chunkedEncode":false,"workerCount":5,"forceScreenshot":false,"totalFrames":150,"framesCompleted":150,"captureMode":"screenshot","captureOperation":"encode"}
+  ██████████████████░░░░░░░  75%  Encoding video
+@hf-progress {"code":"encode","done":0,"total":150,"pct":75}
+  ██████████████████████░░░  90%  Encoding frame 150/150
+@hf-progress {"code":"encode","done":150,"total":150,"pct":90}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"encode","status":"end","elapsedMs":11935,"durationMs":746,"stagePhase":"capturing","hasAudio":false,"isPngSequence":false,"isGif":false,"chunkedEncode":false,"workerCount":5,"forceScreenshot":false,"totalFrames":150,"framesCompleted":150,"captureMode":"screenshot","captureOperation":"encode"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"assemble","status":"start","elapsedMs":11936,"stagePhase":"capturing","hasAudio":false,"workerCount":5,"forceScreenshot":false,"totalFrames":150,"framesCompleted":150,"captureMode":"screenshot","captureOperation":"encode"}
+  ██████████████████████░░░  90%  Assembling final video
+@hf-progress {"code":"assemble","done":0,"total":5,"pct":90}
+  ████████████████████████░  99%  Assembling final video
+@hf-progress {"code":"assemble","done":5,"total":5,"pct":99}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"assemble","status":"end","elapsedMs":11977,"durationMs":41,"stagePhase":"capturing","hasAudio":false,"workerCount":5,"forceScreenshot":false,"totalFrames":150,"framesCompleted":150,"captureMode":"screenshot","captureOperation":"encode"}
+[INFO] [Render:trace] {"renderJobId":"751d894a-7530-4dfa-986c-6e56d67054fa","phase":"pipeline","status":"checkpoint","elapsedMs":12019,"message":"artifact validated","totalElapsedMs":12014}
+  █████████████████████████  100%  Render complete
+
+◇  C:\Users\nfbco\Documents\GITHUB\Product-Film-Studio\.scratch\q1-renderer-spike\out\b3-helpers.mp4
+   586.7 KB · 5.0s video · rendered in 12.0s
+   screenshot capture · hardware gpu · compile 0.2s · extract 0.0s · audio 0.0s · probe 0.0s · setup 3.6s · capture 7.4s · encode 0.7s · assemble 0.0s

@@ -1,0 +1,73 @@
+{
+  "project": "a-state",
+  "runtime": "all",
+  "compositions": [
+    {
+      "composition": "index.html",
+      "source": "index.html",
+      "tweens": [
+        {
+          "id": "__unresolved__-fromTo-__raw:at-other",
+          "target": "__unresolved__",
+          "method": "fromTo",
+          "group": "other",
+          "start": 0,
+          "duration": 0,
+          "end": 0,
+          "shape": "flat",
+          "keyframes": [
+            {
+              "pct": 0,
+              "time": 0,
+              "properties": {
+                "z": 0
+              }
+            },
+            {
+              "pct": 100,
+              "time": 0,
+              "properties": {
+                "z": "__raw:to"
+              }
+            }
+          ],
+          "path": null
+        },
+        {
+          "id": "__unresolved__-fromTo-__raw:at-other-2",
+          "target": "__unresolved__",
+          "method": "fromTo",
+          "group": "other",
+          "start": 0,
+          "duration": 0,
+          "end": 0,
+          "shape": "flat",
+          "keyframes": [
+            {
+              "pct": 0,
+              "time": 0,
+              "properties": {
+                "depth": 0
+              }
+            },
+            {
+              "pct": 100,
+              "time": 0,
+              "properties": {
+                "depth": "__raw:depth"
+              }
+            }
+          ],
+          "path": null
+        }
+      ],
+      "traces": [],
+      "cssKeyframes": [],
+      "anime": []
+    }
+  ],
+  "_meta": {
+    "version": "0.8.141",
+    "updateAvailable": false
+  }
+}

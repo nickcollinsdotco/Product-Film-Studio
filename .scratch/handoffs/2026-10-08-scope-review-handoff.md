@@ -1,5 +1,7 @@
 # Handoff: Product Film Studio, design grilling paused before a scope review
 
+> **Superseded in part** by `2026-10-08-round-7-handoff.md` and [ADR-0010](../../docs/adr/0010-loops-are-the-default-output.md): Loops are now the default output. Where the two differ, the later one wins.
+
 Date: 2026-10-08. Branch: `poc/hyperframes-pipeline`. Repo: `C:\Users\nfbco\Documents\GITHUB\Product-Film-Studio`.
 
 ## What the next session is for

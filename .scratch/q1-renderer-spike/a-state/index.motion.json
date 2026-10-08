@@ -1,0 +1,23 @@
+{
+  "duration": 5,
+  "assertions": [
+    {
+      "kind": "appearsBy",
+      "selector": "#surface-a",
+      "bySec": 0.5
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": "#surface-a"
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": "#surface-b"
+    },
+    {
+      "kind": "keepsMoving",
+      "withinSelector": "#camera",
+      "maxStaticSec": 1.6
+    }
+  ]
+}

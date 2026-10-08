@@ -155,3 +155,6 @@ renders/
 
 .claude/skills/
 references/
+
+# Frames pulled from git-ignored references (client and third-party material)
+.scratch/scope-review/

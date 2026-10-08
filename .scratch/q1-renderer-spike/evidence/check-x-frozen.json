@@ -1,0 +1,717 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"camera\"> is a timeline element that contains nested <div id=\"surface-b\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#camera",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\nfbco\\Documents\\GITHUB\\Product-Film-Studio\\.scratch\\q1-renderer-spike\\x-frozen\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"camera\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": false,
+    "errorCount": 1,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "content_overlap",
+        "severity": "error",
+        "time": 0,
+        "selector": "#surface-b > div:nth-of-type(3) > span:nth-of-type(1)",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 915.48,
+          "top": 384.17,
+          "right": 1027.75,
+          "bottom": 402.96,
+          "width": 112.27,
+          "height": 18.79
+        },
+        "containerSelector": "div.kpis > div:nth-of-type(3) > div:nth-of-type(2)",
+        "text": "Acme Logistics",
+        "fixHint": "Give each block its own zone, or mark intentional layering with data-layout-allow-overlap.",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.48,
+          "y": 384.17,
+          "width": 112.27,
+          "height": 18.79
+        },
+        "firstSeen": 0,
+        "lastSeen": 5,
+        "occurrences": 49,
+        "heldMs": 5000
+      }
+    ],
+    "duration": 5,
+    "samples": [
+      0.278,
+      0.833,
+      1.389,
+      1.944,
+      2.5,
+      3.056,
+      3.611,
+      4.167,
+      4.722
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 1,
+    "truncated": false
+  },
+  "motion": {
+    "ok": false,
+    "errorCount": 1,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "motion_frozen",
+        "severity": "error",
+        "time": 0,
+        "selector": "#camera",
+        "message": "nothing moves within #camera between 0s and 5s (5s static) — should keep moving",
+        "rect": {
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "width": 0,
+          "height": 0
+        },
+        "fixHint": "Add or extend motion so no shot freezes for this long, or shorten the static hold.",
+        "dataAttributes": {
+          "data-start": "0",
+          "data-duration": "5",
+          "data-track-index": "0"
+        },
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstSeen": 0,
+        "lastSeen": 0,
+        "occurrences": 1,
+        "heldMs": 0
+      }
+    ],
+    "enabled": true,
+    "specPath": "C:\\Users\\nfbco\\Documents\\GITHUB\\Product-Film-Studio\\.scratch\\q1-renderer-spike\\x-frozen\\index.motion.json",
+    "samples": 101
+  },
+  "contrast": {
+    "ok": false,
+    "errorCount": 25,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Pipeline",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 912.6956787109375,
+          "y": 288.1739196777344,
+          "width": 88.8043212890625,
+          "height": 27.13043212890625
+        },
+        "time": 0.278
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Northwind Traders",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 341.7391357421875,
+          "width": 136.4022216796875,
+          "height": 19.478240966796875
+        },
+        "time": 0.278
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Acme Logistics",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(3) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 384.1739196777344,
+          "width": 112.271728515625,
+          "height": 19.478240966796875
+        },
+        "time": 0.278
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Globex Health",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(4) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 426.60870361328125,
+          "width": 105.8043212890625,
+          "height": 19.478240966796875
+        },
+        "time": 0.278
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Initech Cloud",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(5) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 469.0434875488281,
+          "width": 97.45648193359375,
+          "height": 19.478240966796875
+        },
+        "time": 0.278
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Pipeline",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 912.6956787109375,
+          "y": 288.1739196777344,
+          "width": 88.8043212890625,
+          "height": 27.13043212890625
+        },
+        "time": 1.389
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Northwind Traders",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 341.7391357421875,
+          "width": 136.4022216796875,
+          "height": 19.478240966796875
+        },
+        "time": 1.389
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Acme Logistics",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(3) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 384.1739196777344,
+          "width": 112.271728515625,
+          "height": 19.478240966796875
+        },
+        "time": 1.389
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Globex Health",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(4) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 426.60870361328125,
+          "width": 105.8043212890625,
+          "height": 19.478240966796875
+        },
+        "time": 1.389
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Initech Cloud",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(5) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 469.0434875488281,
+          "width": 97.45648193359375,
+          "height": 19.478240966796875
+        },
+        "time": 1.389
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Pipeline",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 912.6956787109375,
+          "y": 288.1739196777344,
+          "width": 88.8043212890625,
+          "height": 27.13043212890625
+        },
+        "time": 2.5
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Northwind Traders",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 341.7391357421875,
+          "width": 136.4022216796875,
+          "height": 19.478240966796875
+        },
+        "time": 2.5
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Acme Logistics",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(3) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 384.1739196777344,
+          "width": 112.271728515625,
+          "height": 19.478240966796875
+        },
+        "time": 2.5
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Globex Health",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(4) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 426.60870361328125,
+          "width": 105.8043212890625,
+          "height": 19.478240966796875
+        },
+        "time": 2.5
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Initech Cloud",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(5) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 469.0434875488281,
+          "width": 97.45648193359375,
+          "height": 19.478240966796875
+        },
+        "time": 2.5
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Pipeline",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 912.6956787109375,
+          "y": 288.1739196777344,
+          "width": 88.8043212890625,
+          "height": 27.13043212890625
+        },
+        "time": 3.611
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Northwind Traders",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 341.7391357421875,
+          "width": 136.4022216796875,
+          "height": 19.478240966796875
+        },
+        "time": 3.611
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Acme Logistics",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(3) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 384.1739196777344,
+          "width": 112.271728515625,
+          "height": 19.478240966796875
+        },
+        "time": 3.611
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Globex Health",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(4) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 426.60870361328125,
+          "width": 105.8043212890625,
+          "height": 19.478240966796875
+        },
+        "time": 3.611
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Initech Cloud",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(5) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 469.0434875488281,
+          "width": 97.45648193359375,
+          "height": 19.478240966796875
+        },
+        "time": 3.611
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Pipeline",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 912.6956787109375,
+          "y": 288.1739196777344,
+          "width": 88.8043212890625,
+          "height": 27.13043212890625
+        },
+        "time": 4.722
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Northwind Traders",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 341.7391357421875,
+          "width": 136.4022216796875,
+          "height": 19.478240966796875
+        },
+        "time": 4.722
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Acme Logistics",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(3) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 384.1739196777344,
+          "width": 112.271728515625,
+          "height": 19.478240966796875
+        },
+        "time": 4.722
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Globex Health",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(232,237,246)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(133,136,141)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(4) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 426.60870361328125,
+          "width": 105.8043212890625,
+          "height": 19.478240966796875
+        },
+        "time": 4.722
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 1.15:1; WCAG AA requires 3:1.",
+        "text": "Initech Cloud",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(245,247,251)",
+        "ratio": 1.15,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(139,143,148)",
+        "large": true,
+        "selector": "div > div > div > div:nth-of-type(1) > div:nth-of-type(5) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 915.478271484375,
+          "y": 469.0434875488281,
+          "width": 97.45648193359375,
+          "height": 19.478240966796875
+        },
+        "time": 4.722
+      }
+    ],
+    "enabled": true,
+    "samples": [
+      0.278,
+      1.389,
+      2.5,
+      3.611,
+      4.722
+    ],
+    "checked": 100,
+    "passed": 75
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  },
+  "_meta": {
+    "version": "0.8.141",
+    "updateAvailable": false
+  }
+}

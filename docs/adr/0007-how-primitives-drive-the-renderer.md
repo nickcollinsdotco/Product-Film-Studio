@@ -10,8 +10,8 @@ We compared this with native element tweens and a hybrid in a spike (2026-10-08,
 
 ## Consequences
 
-- Keyframe-level editing inside a Shot is not available in Studio, and `hyperframes keyframes` can't see motion inside Shots. That was a nice-to-have; finer timing changes go through Claude. lint, `check` and its motion audit still work, because they run the composition.
-- A Shot's internal timeline never stretches in Studio. Moving a Shot shifts it, trimming the end cuts it, trimming the start offsets it, and extending it holds the last frame. A Landing therefore sits at a fixed offset inside its Shot: you align it in Studio by moving the Shot, and changing the offset itself goes through the Shot's parameters.
+- Keyframe-level editing inside a Shot is not available in Studio, and `hyperframes keyframes` can't see motion inside Shots. That was a nice-to-have; finer timing changes go through Claude. lint, `check` and its motion audit still work, because they run the composition. Unverified for Surfaces drawn inside a canvas (Three.js), which the motion audit may not see.
+- A Shot's internal timeline never stretches in Studio. Moving a Shot shifts it, trimming the end cuts it, trimming the start offsets it, and extending it freezes on its last frame. The exception is a Bookend's last Shot, which stretches (ADR-0011). A Landing therefore sits at a fixed offset inside its Shot: you align it in Studio by moving the Shot, and changing the offset itself goes through the Shot's parameters.
 - Rules for every Shot template:
   - **No clip timing on inner elements.** The host clip alone controls visibility; inner `data-start`/`data-duration` make an extended Shot go blank.
   - **Prefix inner ids per template.** A shared id such as `#camera` makes HyperFrames turn off its scene-swap optimisation.

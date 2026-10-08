@@ -1,0 +1,20 @@
+16,22c16,22
+<     <div id="root" data-composition-id="edit" data-start="0" data-duration="30" data-width="1920" data-height="1080">
+<       <div id="shot-1" class="clip" data-composition-id="shot-a-state" data-composition-src="compositions/a-state.html" data-start="0" data-duration="5" data-track-index="0" data-width="1920" data-height="1080"></div>
+<       <div id="shot-2" class="clip" data-composition-id="shot-b-native" data-composition-src="compositions/b-native.html" data-start="5" data-duration="5" data-track-index="0" data-width="1920" data-height="1080"></div>
+<       <div id="shot-3" class="clip" data-composition-id="shot-b3-helpers" data-composition-src="compositions/b3-helpers.html" data-start="10" data-duration="5" data-track-index="0" data-width="1920" data-height="1080"></div>
+<       <div id="shot-4" class="clip" data-composition-id="shot-b2-inline" data-composition-src="compositions/b2-inline.html" data-start="15" data-duration="5" data-track-index="0" data-width="1920" data-height="1080"></div>
+<       <div id="shot-5" class="clip" data-composition-id="shot-c-hybrid" data-composition-src="compositions/c-hybrid.html" data-start="20" data-duration="5" data-track-index="0" data-width="1920" data-height="1080"></div>
+<       <div id="shot-6" class="clip" data-composition-id="shot-b2-inline" data-composition-src="compositions/b2-inline.html" data-start="25" data-duration="5" data-track-index="0" data-width="1920" data-height="1080"></div>
+---
+>     <div data-hf-id="hf-wwce" id="root" data-composition-id="edit" data-start="0" data-duration="32" data-width="1920" data-height="1080">
+>       <div data-hf-id="hf-lxvs" id="shot-1" class="clip" data-composition-id="shot-a-state" data-composition-src="compositions/a-state.html" data-start="1" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+>       <div data-hf-id="hf-yyki" id="shot-2" class="clip" data-composition-id="shot-b-native" data-composition-src="compositions/b-native.html" data-start="6" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+>       <div data-hf-id="hf-kjmr" id="shot-3" class="clip" data-composition-id="shot-b3-helpers" data-composition-src="compositions/b3-helpers.html" data-start="11" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+>       <div data-hf-id="hf-qmsn" id="shot-4" class="clip" data-composition-id="shot-b2-inline" data-composition-src="compositions/b2-inline.html" data-start="16" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="1"></div>
+>       <div data-hf-id="hf-s2d8" id="shot-5" class="clip" data-composition-id="shot-c-hybrid" data-composition-src="compositions/c-hybrid.html" data-start="21" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+>       <div data-hf-id="hf-dofm" id="shot-6" class="clip" data-composition-id="shot-b2-inline" data-composition-src="compositions/b2-inline.html" data-start="25" data-duration="7" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+27c27
+<       tl.fromTo("#shot-2", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out" }, 5);
+---
+>       tl.fromTo("#shot-2", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 6);

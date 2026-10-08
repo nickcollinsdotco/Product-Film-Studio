@@ -11,6 +11,8 @@ due:              # Date, or blank
 
 # Film brief: <film>
 
+> **Superseded (2026-10-08), kept for reference.** Use `project.md` for the Project and its Loops, and `film-brief.md` for a full Film. This long version predates Loops and still uses old vocabulary (house style, storyboard, Surface for an asset, type reveal).
+
 **How to use.** Fill sections 1 to 6. That is enough to write a Shot list. Sections 7 to 10 are optional; anything left blank falls back to the defaults below. Guidance sits in HTML comments, so it stays out of the rendered brief and can be left in.
 
 **Short version (8 to 10s films):** front matter, 1 (The point only), 2, 4 (2 or 3 moments), 5, 6 (End card only).

@@ -4,6 +4,6 @@ Shot templates express intent through semantic Primitives (`camera.pushIn()`, `s
 
 ## Consequences
 
-- Until the Three.js Renderer exists, device frames are 2D (none / browser / phone / laptop).
+- Until the Three.js Renderer exists, device frames are 2D (none / browser / phone / laptop). *Superseded in part (2026-10-09):* Loops get none plus a simple phone body with real thickness (ADR-0010). This whole ADR is under review. If we build Loops, it is decided after the Steel Hat remake, because the phone body (awkward in CSS 3D, easy in Three.js) is a deciding input alongside the look test.
 - Primitives must not leak Renderer-specific options into a Shot template's parameters.
 - How Primitives drive a Renderer (scene state or native element tweens) is decided separately; see ADR-0007.

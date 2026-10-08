@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Shot template b2-inline</title>
+  </head>
+  <body>
+    <template>
+    <style>
+      #root { position: absolute; inset: 0; font-family: sans-serif;
+        background: radial-gradient(ellipse at 50% 40%, #131a24 0%, #07090d 70%); }
+      #viewport { position: absolute; inset: 0; perspective: 1600px; perspective-origin: 50% 50%; }
+      #camera { position: absolute; inset: 0; transform-style: preserve-3d; }
+      .surface { position: absolute; width: 900px; height: 560px; box-sizing: border-box;
+        border-radius: 18px; background: #f5f7fb; color: #0f172a; padding: 28px 32px;
+        box-shadow: 0 40px 120px rgba(0,0,0,0.55); overflow: hidden; }
+      #surface-a { left: 260px; top: 250px; transform: translateZ(0px); }
+      #surface-b { left: 1100px; top: 80px; background: #101826; color: #e2e8f0; transform: translateZ(-700px); }
+      .bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+      .title { font-size: 34px; font-weight: 700; letter-spacing: -0.01em; }
+      .pill { font-size: 18px; padding: 6px 14px; border-radius: 999px; background: #e0e7ff; color: #3730a3; }
+      #surface-b .pill { background: #1e3a5f; color: #93c5fd; }
+      .kpis { display: flex; gap: 18px; margin-bottom: 26px; }
+      .kpi { flex: 1; border-radius: 12px; background: #e8edf6; padding: 16px 18px; }
+      .kpi .label { font-size: 17px; color: #475569; }
+      .kpi .value { font-size: 40px; font-weight: 700; margin-top: 6px; }
+      .chart { display: flex; align-items: flex-end; gap: 14px; height: 230px; padding: 0 6px; }
+      .chart div { flex: 1; border-radius: 6px 6px 0 0; background: #6366f1; }
+      .row { display: flex; justify-content: space-between; font-size: 24px; padding: 16px 4px;
+        border-bottom: 1px solid #22314a; }
+      .row .stage { color: #94a3b8; font-size: 20px; }
+      .tag { position: absolute; left: 32px; bottom: 28px; font-size: 22px; color: #64748b; }
+    </style>
+    <div id="root" data-composition-id="shot-b2-inline" data-width="1920" data-height="1080">
+      <div class="tag">b2-inline</div>
+      <div id="viewport">
+        <div id="camera">
+          <div id="surface-b" class="surface" data-layout-allow-overlap>
+            <div class="bar"><div class="title">Pipeline</div><div class="pill">This week</div></div>
+            <div class="row"><span>Northwind Traders</span><span class="stage">Proposal · $48k</span></div>
+            <div class="row"><span>Acme Logistics</span><span class="stage">Negotiation · $112k</span></div>
+            <div class="row"><span>Globex Health</span><span class="stage">Discovery · $31k</span></div>
+            <div class="row"><span>Initech Cloud</span><span class="stage">Closed won · $76k</span></div>
+            <div class="row"><span>Umbrella Retail</span><span class="stage">Proposal · $22k</span></div>
+          </div>
+          <div id="surface-a" class="surface" data-layout-allow-overlap>
+            <div class="bar"><div class="title">Revenue overview</div><div class="pill">Q3 2026</div></div>
+            <div class="kpis">
+              <div class="kpi"><div class="label">MRR</div><div class="value">$84.2k</div></div>
+              <div class="kpi"><div class="label">Growth</div><div class="value">+12.4%</div></div>
+              <div class="kpi"><div class="label">Churn</div><div class="value">1.8%</div></div>
+            </div>
+            <div class="chart">
+              <div style="height: 38%"></div><div style="height: 52%"></div><div style="height: 47%"></div>
+              <div style="height: 63%"></div><div style="height: 71%"></div><div style="height: 66%"></div>
+              <div style="height: 82%"></div><div style="height: 94%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // ---- Shot: literal tweens (what the Primitives would have emitted) ----
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#camera", { z: 0 }, { z: 350, duration: 3, ease: "power2.inOut" }, 0.5);
+      tl.fromTo("#surface-a", { filter: "blur(0px)" }, { filter: "blur(10px)", duration: 1.5, ease: "power2.inOut" }, 1.5);
+      tl.fromTo("#surface-b", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 1.5, ease: "power2.inOut" }, 1.5);
+      window.__timelines["shot-b2-inline"] = tl;
+    </script>
+    </template>
+  </body>
+</html>
