@@ -1,5 +1,7 @@
 # Handoff: scope change to Loops, Round 7 decided
 
+> **Superseded** by `2026-10-09-round-9-handoff.md`, and by ADR-0010, ADR-0011 and the glossary, which now record Rounds 7–9. Where they differ, the later ones win.
+
 Date: 2026-10-08. Branch: `poc/hyperframes-pipeline`. Repo: `C:\Users\nfbco\Documents\GITHUB\Product-Film-Studio`. Follows `.scratch/handoffs/2026-10-08-scope-review-handoff.md` (read that first; this doc only covers what happened since).
 
 **No docs have been updated for the new direction.** GLOSSARY.md, the ADRs and `docs/brief-template/` still describe the old Film-first plan. The user had said "don't update any docs until we've agreed the new direction". Round 7 below is now agreed, apart from Q1 (bake-off pending) and the open items in "Next round". Confirm with the user before writing docs, then follow the update list at the end.
