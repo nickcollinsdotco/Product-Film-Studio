@@ -50,3 +50,13 @@ The video used all five, via Auto-motion: 3D, speed Med, **Infinite loop off**. 
 | | bloom | none listed |
 
 Backdrop: plain black, with no glow visible.
+
+**2026-10-09, closer controls.** All are 1280×720, 30fps, Lens blur, focus areas `title → rail` matched to the look test by eye. Some extra camera angle change remains. Contact sheets are in `.scratch/scope-review/ref-frames/cf-*-sheet.png`.
+
+- **`control-free-02.mp4`** (5.97s): one shift, title → rail, ending on the rail. **This is the like-for-like control for 02.**
+- **`control-free-02-looped.mp4`** (7.97s, Infinite loop on): title → rail → back to title. Results:
+  - **Pose matches:** the last frame against frame 0 is 31.8 dB PSNR.
+  - **Speed doesn't match.** It eases to rest at the end (consecutive frames 38–39 dB), then frame 0 → 1 is the biggest step in the clip (19.4 dB; the next steps are 24.9, 25.8, 26.6 and so on). So it lurches out of the Seam from a standstill.
+  - ADR-0011's speed check would fail it.
+- **`control-free-03.mp4`** (3.97s): not a control (the user just liked it).
+- **`control-free-04.mp4`** (7.97s, pale grey Backdrop): title → rail → back. Pose matches (30.5 dB), and both ends are near rest: frame 0 → 1 is 38.1 dB, the last steps 37–39 dB. **A clean Bookend-style Seam.** Which settings differ from 02-looped is still to be asked.
