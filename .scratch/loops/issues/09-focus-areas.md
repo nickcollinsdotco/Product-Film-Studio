@@ -41,3 +41,21 @@ Source: HyperFrames 0.8.141 `capture`, read from the source, not run (`packages/
 5. How do you approve them: a contact sheet of framed snapshots, one per area, or boxes drawn on the Screen?
 6. If DOM boxes are wanted, our own small capture step (exact width, DPR 3, named selectors) rather than `hyperframes capture`?
 
+## Comments
+
+**2026-10-09, user's answers to the research questions.**
+
+1. Screens come from a site the user can run, or from Figma, about 60/40.
+2. Focus areas are rough camera targets for now.
+3. Storage: undecided; wants suggestions or a discussion.
+4. Coordinates: undecided; wants suggestions or a discussion.
+5. Approval: boxes drawn on the Screen are easiest for the user; open to other suggestions.
+6. Own capture step versus `hyperframes capture`: undecided; wants suggestions or a discussion.
+
+**Claude's suggestions (not decided; for the grilling).**
+
+- **Q3, storage:** a sidecar next to each Screen, `<screen>.areas.json`. Areas belong to the Screen (glossary), so they should travel with the file whether it came from a site or from Figma. The ingest manifest (ADR-0003) can point to the sidecar instead of copying its contents.
+- **Q4, coordinates:** 1x px at the Screen's layout width, with that width stored in the file (for example `"layoutWidth": 1512`). This is what the look test used. It reads naturally against the site and against Figma frames, both 1x px, and it holds for @2x and @3x exports. Normalised 0–1 values are harder to read and to sanity-check.
+- **Q5, approval:** Claude writes a single overlay image, the Screen with each area's labelled box drawn on it (drawn with PIL, because FFmpeg's `drawtext` crashes here). You approve or correct it in one reply. Framed snapshots then wait for the Draft render, where they come free. A small drag-to-adjust HTML page is possible later, only if correcting boxes in words becomes tedious.
+- **Q6, capture:** neither for now. Rough camera targets don't need DOM precision, and Claude proposing from the image works for both sources (tried in 02). Revisit when an area needs tight boxes. At that point two exact sources exist: the DOM, through our own Playwright step at the Screen's width and DPR 3 (`hyperframes capture` runs at 1920 wide and 1x), and Figma layer bounds through the Figma connector (not yet authorized).
+

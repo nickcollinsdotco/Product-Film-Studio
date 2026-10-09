@@ -1,7 +1,7 @@
 # Look test: CSS fake against Three.js against the control
 
 Type: prototype
-Status: open
+Status: resolved
 
 Timebox one working session, in `.scratch/look-test/`, using the prototype skill. The control (01) is optional: if the user has made a free-tier Ultramock export, match framing and timing to it and compare against it; otherwise compare against `references/ultramock/*.mp4` and `references/own/steel-hat-phone.mp4`. The like-for-like comparison with a paid control waits for 06.
 
@@ -32,5 +32,5 @@ Findings note: [`.scratch/look-test/FINDINGS.md`](../../look-test/FINDINGS.md). 
 - **Resolution.** At an 800 CSS px card on a 2x display, 1600 and 1920 are indistinguishable. At 960 CSS px, 1920 is marginally crisper on small captions. 1920 costs +38% render time.
 - **Bitrate, grain, banding.** About 2.9 MB per 5s at 5 Mbps and 2.4 MB at 4 Mbps, so the 6 MB cap holds a ~10s Loop at 5 Mbps. **Dither alone doesn't survive H.264 at 4–5 Mbps** (clear bands at ×6 contrast). **Grain at 0.03 does survive** (about half its high-frequency energy is kept, and it prevents the banding). This reverses ADR-0010's "dither only" fallback. At normal contrast, banding is barely perceptible on this dark Backlight. 4 and 5 Mbps look the same on type.
 
-Left open for the user's review. Inputs for 06 (user decisions): resolution, Seam thresholds, grain policy and cap, and whether Version 2 beats a paid control.
+Reviewed and accepted by the user on 2026-10-09 (tuned review MP4 "looks alright"; no shimmer seen). Inputs for 06 (user decisions): resolution, Seam thresholds, grain policy and cap, and whether Version 2 beats a paid control.
 
