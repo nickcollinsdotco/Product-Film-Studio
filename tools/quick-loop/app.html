@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Quick Loop</title>
+    <style>
+      :root { color-scheme: dark; --line: #262a31; --muted: #8b919c; --accent: #5b8cff; }
+      * { box-sizing: border-box; }
+      body { margin: 0; height: 100vh; display: grid; grid-template-columns: 340px 1fr; font: 13px/1.4 system-ui, sans-serif; background: #0b0d10; color: #e6e8eb; }
+      aside { border-right: 1px solid var(--line); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+      h1 { font-size: 15px; margin: 0; }
+      section { display: flex; flex-direction: column; gap: 8px; }
+      h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0; font-weight: 600; }
+      label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      label > span:first-child { color: #c4c8cf; }
+      select, input[type=text] { background: #15181d; color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; font: inherit; min-width: 0; }
+      input[type=range] { width: 150px; }
+      button { background: #1b1f26; color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+      button:disabled { opacity: .5; cursor: default; }
+      .swatches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+      .swatches button { width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 2px solid transparent; }
+      .swatches button.on { border-color: #fff; }
+      .swatches input[type=color] { width: 28px; height: 26px; padding: 0; border: 0; background: none; }
+      #drop { border: 1px dashed #3a404a; border-radius: 8px; padding: 14px; text-align: center; color: var(--muted); cursor: pointer; }
+      #drop.over { border-color: var(--accent); color: #fff; }
+      #picker { position: relative; max-height: 340px; overflow-y: auto; border-radius: 6px; border: 1px solid var(--line); display: none; cursor: crosshair; user-select: none; }
+      #pickarea { position: relative; }
+      #picker img { display: block; width: 100%; pointer-events: none; }
+      #box { position: absolute; border: 2px solid var(--accent); background: rgba(91,140,255,.18); display: none; pointer-events: none; }
+      .hint { color: var(--muted); font-size: 12px; }
+      main { display: grid; grid-template-rows: 1fr auto; min-width: 0; min-height: 0; }
+      #stagewrap { position: relative; overflow: hidden; display: grid; place-items: center; background: repeating-conic-gradient(#101317 0 25%, #0d1013 0 50%) 0 0 / 24px 24px; }
+      #preview { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; box-shadow: 0 0 0 1px #333; background: #000; }
+      footer { border-top: 1px solid var(--line); padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+      #scrub { flex: 1; width: auto; }
+      #time { font-variant-numeric: tabular-nums; color: var(--muted); width: 90px; }
+      #status { color: var(--muted); max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #status a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <h1>Quick Loop</h1>
+
+      <section>
+        <h2>Screen image</h2>
+        <div id="drop">Drop a screenshot or Figma export here,<br>click to choose, or paste</div>
+        <input id="file" type="file" accept="image/*" hidden>
+        <div id="picker"><div id="pickarea"><img id="thumb" alt=""><div id="box"></div></div></div>
+        <div class="hint" id="focushint" hidden>Drag on the image to set a focus area. <button id="clearfocus">Clear</button></div>
+      </section>
+
+      <section>
+        <h2>Output</h2>
+        <label><span>Name</span><input id="name" type="text" value="loop"></label>
+        <label><span>Format</span>
+          <select id="format">
+            <option value="1920x1080">16:9 · 1920×1080</option>
+            <option value="1600x1200">4:3 · 1600×1200</option>
+            <option value="1080x1080">1:1 · 1080×1080</option>
+            <option value="1080x1920">9:16 · 1080×1920</option>
+          </select>
+        </label>
+        <label><span>Duration <b id="durv"></b></span><input id="duration" type="range" min="3" max="20" step="0.5" value="8"></label>
+        <label><span>Quality</span>
+          <select id="quality"><option value="draft">Draft (fast)</option><option value="looks" selected>Standard</option><option value="delivery">High</option></select>
+        </label>
+      </section>
+
+      <section>
+        <h2>Background</h2>
+        <div class="swatches" id="swatches"></div>
+        <label><span>Style</span><select id="backdrop"><option value="glow">Soft glow</option><option value="solid">Solid</option></select></label>
+      </section>
+
+      <section>
+        <h2>Screen</h2>
+        <label><span>Viewport</span>
+          <select id="viewport"><option value="16:10">Desktop 16:10</option><option value="4:3">Tablet 4:3</option><option value="9:19.5">Phone</option><option value="fill">Fill frame height</option></select>
+        </label>
+        <label><span>Frame</span><select id="frame"><option value="browser">Browser bar</option><option value="none">None</option></select></label>
+        <label><span>Size</span><input id="screenWidth" type="range" min="0.4" max="0.95" step="0.01" value="0.72"></label>
+        <label><span>Corner radius</span><input id="radius" type="range" min="0" max="40" step="1" value="14"></label>
+        <label><span>Tilt</span><input id="tilt" type="range" min="0" max="20" step="0.5" value="8"></label>
+        <label><span>Shadow</span><input id="shadow" type="checkbox" checked></label>
+      </section>
+
+      <section>
+        <h2>Motion</h2>
+        <label><span>Zoom into focus area</span><input id="zoom" type="checkbox" checked></label>
+        <label><span>Return to start (seamless loop)</span><input id="loopBack" type="checkbox"></label>
+      </section>
+    </aside>
+
+    <main>
+      <div id="stagewrap"><iframe id="preview" src="/composition.html"></iframe></div>
+      <footer>
+        <button id="play">Pause</button>
+        <input id="scrub" type="range" min="0" max="1" step="0.001" value="0">
+        <span id="time"></span>
+        <button id="render" class="primary" disabled>Render MP4</button>
+        <span id="status"></span>
+      </footer>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const COLORS = ["#0e1116", "#1a1d24", "#ffffff", "#f3f1ec", "#e8eefc", "#1d3fd6", "#e11d48", "#0f766e", "#f59e0b", "#7c3aed"];
+      const cfg = { bg: COLORS[0], image: null, focus: null };
+      let playing = true, t = 0, last = performance.now();
+
+      // Background swatches + custom picker.
+      const sw = $("swatches");
+      const pickBg = (c) => { cfg.bg = c; [...sw.querySelectorAll("button")].forEach((b) => b.classList.toggle("on", b.dataset.c === c)); custom.value = c; update(); };
+      COLORS.forEach((c) => { const b = document.createElement("button"); b.dataset.c = c; b.style.background = c; b.title = c; b.onclick = () => pickBg(c); sw.append(b); });
+      const custom = Object.assign(document.createElement("input"), { type: "color", title: "Custom colour" });
+      custom.oninput = () => pickBg(custom.value);
+      sw.append(custom);
+
+      function read() {
+        const [width, height] = $("format").value.split("x").map(Number);
+        Object.assign(cfg, {
+          name: $("name").value, width, height, duration: Number($("duration").value), quality: $("quality").value,
+          backdrop: $("backdrop").value, viewport: $("viewport").value, frame: $("frame").value,
+          screenWidth: Number($("screenWidth").value), radius: Number($("radius").value), tilt: Number($("tilt").value),
+          shadow: $("shadow").checked, zoom: $("zoom").checked, loopBack: $("loopBack").checked,
+        });
+        $("durv").textContent = cfg.duration + "s";
+      }
+
+      function fit() {
+        const wrap = $("stagewrap"), f = $("preview");
+        const s = Math.min((wrap.clientWidth - 48) / cfg.width, (wrap.clientHeight - 48) / cfg.height);
+        Object.assign(f.style, { width: cfg.width + "px", height: cfg.height + "px",
+          transform: `translate(${(wrap.clientWidth - cfg.width * s) / 2}px, ${(wrap.clientHeight - cfg.height * s) / 2}px) scale(${s})` });
+      }
+
+      const quick = () => $("preview").contentWindow.quick;
+      function update() {
+        read(); fit();
+        if (quick()) { quick().apply({ ...cfg }); quick().seek(t); }
+        $("render").disabled = !cfg.image;
+      }
+      document.querySelectorAll("aside select, aside input").forEach((el) => el.addEventListener("input", update));
+      $("preview").addEventListener("load", update);
+      window.addEventListener("resize", fit);
+
+      // Transport.
+      $("play").onclick = () => { playing = !playing; $("play").textContent = playing ? "Pause" : "Play"; last = performance.now(); };
+      $("scrub").oninput = () => { t = Number($("scrub").value) * cfg.duration; if (quick()) quick().seek(t); playing = false; $("play").textContent = "Play"; };
+      (function tick(now) {
+        if (playing && quick()) { t = (t + (now - last) / 1000) % cfg.duration; quick().seek(t); $("scrub").value = t / cfg.duration; }
+        last = now;
+        $("time").textContent = `${t.toFixed(2)} / ${cfg.duration}s`;
+        requestAnimationFrame(tick);
+      })(performance.now());
+
+      // Image upload: drop, click, paste.
+      async function useFile(file) {
+        if (!file || !file.type.startsWith("image/")) return;
+        $("drop").textContent = "Uploading…";
+        const r = await fetch("/upload", { method: "POST", body: file });
+        const img = await r.json();
+        if (img.error) { $("drop").textContent = "Upload failed: " + img.error; return; }
+        cfg.image = { url: img.url, w: img.w, h: img.h };
+        cfg.focus = null; $("box").style.display = "none";
+        if ($("name").value === "loop") $("name").value = file.name.replace(/\.[^.]+$/, "") || "loop";
+        $("thumb").src = img.url; $("picker").style.display = "block"; $("focushint").hidden = false;
+        $("drop").textContent = `${file.name} · ${img.w}×${img.h} (drop another to replace)`;
+        t = 0; update();
+      }
+      const drop = $("drop");
+      drop.onclick = () => $("file").click();
+      $("file").onchange = () => useFile($("file").files[0]);
+      drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("over"); };
+      drop.ondragleave = () => drop.classList.remove("over");
+      drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("over"); useFile(e.dataTransfer.files[0]); };
+      document.onpaste = (e) => useFile([...e.clipboardData.files][0]);
+
+      // Focus area: drag a box on the thumbnail. Stored as fractions of the image.
+      const picker = $("picker"), box = $("box");
+      let start = null;
+      const pos = (e) => { const r = $("thumb").getBoundingClientRect(); return { x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) }; };
+      const drawBox = (f) => Object.assign(box.style, { display: "block", left: f.x * 100 + "%", top: f.y * 100 + "%", width: f.w * 100 + "%", height: f.h * 100 + "%" });
+      picker.onmousedown = (e) => { start = pos(e); e.preventDefault(); };
+      window.addEventListener("mousemove", (e) => {
+        if (!start) return;
+        const p = pos(e);
+        drawBox({ x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) });
+      });
+      window.addEventListener("mouseup", (e) => {
+        if (!start) return;
+        const p = pos(e), f = { x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) };
+        start = null;
+        if (f.w < 0.02 || f.h * cfg.image.h < 20) { box.style.display = "none"; cfg.focus = null; } else cfg.focus = f;
+        update();
+      });
+      $("clearfocus").onclick = () => { cfg.focus = null; box.style.display = "none"; update(); };
+
+      // Render.
+      $("render").onclick = async () => {
+        read();
+        $("render").disabled = true;
+        $("status").textContent = "Rendering…";
+        const job = await (await fetch("/render", { method: "POST", body: JSON.stringify(cfg) })).json();
+        if (job.error) { $("status").textContent = job.error; $("render").disabled = false; return; }
+        const poll = setInterval(async () => {
+          const j = await (await fetch("/jobs/" + job.id)).json();
+          const line = j.log.trim().split(/\r?\n/).pop() || "";
+          if (j.status === "rendering") { $("status").textContent = "Rendering… " + line.replace(/\x1b\[[0-9;]*m/g, ""); return; }
+          clearInterval(poll);
+          $("render").disabled = false;
+          $("status").innerHTML = j.status === "done"
+            ? `Done in ${j.seconds}s · <a href="${j.output}" target="_blank">open MP4</a>`
+            : "Render failed (see server console)";
+          if (j.status !== "done") console.error(j.log);
+        }, 1000);
+      };
+
+      pickBg(COLORS[0]);
+    </script>
+  </body>
+</html>
