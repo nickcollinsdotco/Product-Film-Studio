@@ -2,6 +2,8 @@
 
 Date: 2026-10-09. Repo: `C:\Users\nfbco\Documents\GITHUB\Product-Film-Studio`, branch `poc/hyperframes-pipeline`, HEAD `3e443ba` (nothing pushed). Supersedes `.scratch/handoffs/2026-10-08-round-7-handoff.md` wherever they differ; that one is now stale on most decisions.
 
+**Live task list: `.scratch/loops/map.md` and `.scratch/loops/issues/`.** It is the current plan; the Plan and Open sections below are a snapshot of it from 2026-10-09.
+
 ## Read first (source of truth, not repeated here)
 
 - `AGENTS.md`: working principles. grill-with-docs, to-spec, to-tickets, implement and handoff run only when the user types them, so recommend them. Rendered frames are the validation for anything visual.
