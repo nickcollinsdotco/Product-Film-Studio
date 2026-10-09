@@ -4,7 +4,7 @@ PROTOTYPE, throwaway. One session on 2026-10-09. The VR website hero Screen (`ho
 
 - Version 2 (Three.js): `templates/v2-three.template.html`. Mipmapped texture with 16× anisotropic filtering. 4× MSAA render target, half float. Custom depth of field: depth comes analytically from the Screen plane, so the blur extends softly past the plane's edges; a 96-tap golden-angle gather. UnrealBloom, then a grade pass with grain seeded by frame index `t mod D`, TPDF dither and the sRGB encode.
 - Version 1 (CSS): `templates/v1-css.template.html`. A CSS 3D plane. Depth of field is five stacked `backdrop-filter` layers whose gradient masks sit either side of the screen-space focus line. Grain is a soft-light noise tile seeded by frame index; Backlight is a radial gradient.
-- Build: `node tools/build.mjs <v1-css|v2-three> <width> [overrides-json]` writes `index.html`. Encode: `tools/encode.sh`. Metrics: `tools/sweep.py`, `tools/crops.sh`, `tools/shimmer.py`.
+- Build: `node tools/build.mjs <v1-css|v2-three> <width> [overrides-json]` writes `index.html`. Encode: `tools/encode.sh`. Metrics: `tools/sweep.py`, `tools/crops.sh`, `tools/shimmer.py`, `tools/motion.py`. Side-by-side: `tools/sbs.sh`, `tools/sbs_crops.py`.
 - Contact sheets and crops are in `sheets/`, which is git-ignored because the frames show the client Screen and third-party clips. Raw masters are in `out/` (also ignored; delete when done).
 
 Machine: Windows, RTX 5070 Ti. HyperFrames' headless Chrome uses the hardware GPU (ANGLE D3D11, auto-probed). Software WebGL wasn't tested.
@@ -29,6 +29,17 @@ The free control is 1280×720, 30fps, ~7.9 Mbps and watermarked. Neither the fre
 - **Tuned review at 1600** (`sheets/v2-1600-tuned-5M.mp4`, `sheets/contact-v2-1600-tuned-5M.png`): p99 edge gradient against the first settings is 167 vs 123 on the title, 86 vs 59 on "Over the", and 55 vs 33 on the meta row. Title, subtitle and meta row are sharp; the CTA row falls off, as in still 02.
 - **Studio gotcha**: while `preview` runs, Studio rewrites every HTML file in the project, templates included. It adds `data-hf-id` and re-quotes attributes (single-quoted JSON becomes `&quot;`), so a later text edit can silently miss. The variables declaration's `default` beats the JS fallback, so the first review render came out at aperture 6 until this was caught by measuring.
 - **Tuned defaults now in the template**: LOD bias −0.5, aperture 3.5. The bitrate sweep, determinism and resolution masters above were rendered with the first settings (bias 0, aperture 6). Neither change touches the grade, so those results stand.
+
+## Side by side with `control-free-02`
+
+`control-free-02.mp4` is the like-for-like free control (ticket 01): Lens blur, one shift `title → rail`, 5.97s, 1280×720, 30fps. Against it, the tuned Version 2 at 5 Mbps, so both are delivery encodes.
+
+- **Video**: `sheets/sbs-control02-vs-v2.mp4`. 2240×764, 60fps, real time, CRF 10 so the side-by-side encode adds little. Same display height (720): the control is native, Version 2 is scaled from 1600×1200. Version 2 lasts 5.00s, so from there it holds its last frame (labelled) until the control's 5.97s. The `title → rail` move starts at about 1.1s in both, so no time shift is needed.
+- **Paused type**: `sheets/sbs-control02-vs-v2-type-2x.png`, crops at 2× nearest. On the title, subtitle and meta row, Version 2's edges are cleaner; the control's 720p type is blockier, with ringing. On the rail captions they're about level. The control frames closer: at the same display height its title is about 1.2× taller.
+- **Depth of field**: the control's is deep. While it's settled on the title, the nav, CTA row and rail thumbnails all read sharp, and the blur mostly shows during and after the move, on the far side. Version 2's is shallower throughout: on the title, the nav, CTA row and rail are already soft.
+- **Camera**: the control travels much further. It swings low and close until the rail and chip row fill the frame and the title leaves frame right, and the Screen bleeds off the top and left edges throughout. Version 2 is a gentle reframe: the far corner of the Screen stays in frame, and the blurred title is still in shot at the end.
+- **Timing** (`tools/motion.py`, mean |Δluma| per step): the control never holds. It opens at speed (first step 5.7 against 0.4 when settled), eases onto the title by 1.13s, then the move accelerates for 1.9s, peaks at 3.05s and eases out slowly, still moving at 5.97s. Version 2 holds until 1.1s, runs a symmetric 2.5s ease that peaks at 2.2s, and holds again from 3.6s.
+- **Backdrop**: the control is plain black; Version 2 shows the maroon Backlight.
 
 ## Render time
 
