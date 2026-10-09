@@ -1,7 +1,7 @@
 # Ultramock control
 
 Type: task (user)
-Status: open
+Status: resolved
 
 Export the like-for-like control from Ultramock Pro: the VR website Screen, the same two focus areas, one focus shift, with tilt, Backdrop (dark void with Backlight) and duration as close as Ultramock allows. 60fps, highest resolution. If it can't export 4:3, export 16:9 at 4K; 02 centre-crops it and notes the crop.
 
@@ -61,3 +61,7 @@ Backdrop: plain black, with no glow visible.
 - **`control-free-03.mp4`** (3.97s): not a control (the user just liked it).
 - **`control-free-04.mp4`** (7.97s, pale grey Backdrop): title → rail → back. Pose matches (30.5 dB), and both ends are near rest: frame 0 → 1 is 38.1 dB, the last steps 37–39 dB. **A clean Bookend-style Seam.** What differs from 02-looped: the user picked a camera preset from Ultramock's Presets menu instead of Auto-motion, and calls the clean Seam luck. Which preset isn't recorded yet. The free-tier menu lists Scan left to right, Left – top to bottom, Low-angle pan up, Slow zoom out, Overhead pan, Out and back, Fold up and Flat truck, each at 4s.
 - **Why 02-looped lurches.** From frame 1 on it matches 02 (49 dB, encode noise); only frame 0 differs (19.9 dB against 02's frame 0). So Infinite loop just swaps frame 0 for the end pose. Auto-motion's opening still starts at speed (02's first step is 5.7, against 0.4 when settled). A clean Ultramock Seam needs a move that rests at both ends, as 04's preset happened to; Infinite loop doesn't make one.
+
+## Answer
+
+Decided by the user on 2026-10-09: the free-tier controls are good enough for now, so the Pro export (60fps, highest resolution) is skipped. The like-for-like control is `control-free-02.mp4`; the sharpness bar is the 1920×1440 still `control-free 02.png`; `control-free-04.mp4` shows that an Ultramock preset can give a clean Bookend Seam (which preset is unrecorded). Settings and focus areas are in the comments above. 06 goes ahead against these.

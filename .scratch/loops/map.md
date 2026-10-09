@@ -17,11 +17,13 @@ Goal: ship 3–5 portfolio Loops of the VR website that clearly beat the Steel H
 - The portfolio's Framer cards lazy-load video and pause off-screen, so the 6 MB cap is per Loop as it scrolls into view: [03](issues/03-portfolio-lazy-load.md).
 - Look test done: tuned Three.js matches the free Ultramock still on in-focus type, grain 0.03 survives 4–5 Mbps where dither alone bands, frame 0 is byte-identical on this machine; inputs for 06: [02](issues/02-look-test.md), [findings](../look-test/FINDINGS.md).
 - Focus areas: `<screen>.areas.json` sidecar, 1x px boxes at layout width, proposed by Claude from the image, approved on a labelled overlay; no capture step yet: [09](issues/09-focus-areas.md).
+- Ultramock control: free tier is enough for now, no Pro export; `control-free-02` is the like-for-like control, the 1920×1440 still the sharpness bar. 06 is unblocked: [01](issues/01-ultramock-control.md).
+- X version: 960×720 60fps. X keeps a 1600×1200 original but serves 4:3 at 960×720 max, at about 350 kbps for a dark static scene. Grain is lost and the Backdrop blocks: [04](issues/04-x-test-upload.md).
 - Grilling history (Rounds 7–9): [round 9 handoff](../handoffs/2026-10-09-round-9-handoff.md).
 
 ## Fog
 
-- Whether HyperFrames + Three.js beats a paid Ultramock control (01, 06). Against the free tier's 1920×1440 still it matches on in-focus sharpness once tuned (02).
+- Whether HyperFrames + Three.js beats Ultramock Pro (06); only the free tier was tested (01). Against the free tier's 1920×1440 still it matches on in-focus sharpness once tuned (02).
 - Seam thresholds across machines: frame 0 is byte-identical on one machine and GPU; another GPU, SwiftShader or a Chrome update is untested (02, 06).
 - Depth of field with several Surfaces or a phone body under Three.js needs a real depth buffer; the look test used one analytic plane (07, 12).
 - Multi-Shot Loops under Three.js: one canvas or WebGL context per Shot sub-composition (12).
