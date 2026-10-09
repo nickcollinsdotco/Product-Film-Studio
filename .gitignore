@@ -147,3 +147,14 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# HyperFrames render output
+renders/
+.hf-tmp/
+.hyperframes/
+
+.claude/skills/
+references/
+
+# Frames pulled from git-ignored references (client and third-party material)
+.scratch/scope-review/

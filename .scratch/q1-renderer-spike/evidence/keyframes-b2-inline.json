@@ -1,0 +1,112 @@
+{
+  "project": "b2-inline",
+  "runtime": "all",
+  "compositions": [
+    {
+      "composition": "index.html",
+      "source": "index.html",
+      "tweens": [
+        {
+          "id": "#camera-fromTo-500-other",
+          "target": "#camera",
+          "method": "fromTo",
+          "group": "other",
+          "start": 0.5,
+          "duration": 3,
+          "end": 3.5,
+          "shape": "flat",
+          "keyframes": [
+            {
+              "pct": 0,
+              "time": 0.5,
+              "properties": {
+                "z": 0
+              }
+            },
+            {
+              "pct": 100,
+              "time": 3.5,
+              "properties": {
+                "z": 350
+              }
+            }
+          ],
+          "path": null
+        },
+        {
+          "id": "#surface-a-fromTo-1500-other",
+          "target": "#surface-a",
+          "method": "fromTo",
+          "group": "other",
+          "start": 1.5,
+          "duration": 1.5,
+          "end": 3,
+          "shape": "flat",
+          "keyframes": [
+            {
+              "pct": 0,
+              "time": 1.5,
+              "properties": {
+                "filter": "blur(0px)"
+              }
+            },
+            {
+              "pct": 100,
+              "time": 3,
+              "properties": {
+                "filter": "blur(10px)"
+              }
+            }
+          ],
+          "path": null,
+          "composedWith": [
+            {
+              "selector": "#camera",
+              "summary": "z 0..350"
+            }
+          ]
+        },
+        {
+          "id": "#surface-b-fromTo-1500-other",
+          "target": "#surface-b",
+          "method": "fromTo",
+          "group": "other",
+          "start": 1.5,
+          "duration": 1.5,
+          "end": 3,
+          "shape": "flat",
+          "keyframes": [
+            {
+              "pct": 0,
+              "time": 1.5,
+              "properties": {
+                "filter": "blur(10px)"
+              }
+            },
+            {
+              "pct": 100,
+              "time": 3,
+              "properties": {
+                "filter": "blur(0px)"
+              }
+            }
+          ],
+          "path": null,
+          "composedWith": [
+            {
+              "selector": "#camera",
+              "summary": "z 0..350"
+            }
+          ]
+        }
+      ],
+      "traces": [],
+      "cssKeyframes": [],
+      "anime": []
+    }
+  ],
+  "_meta": {
+    "version": "0.8.141",
+    "updateAvailable": false
+  }
+}

@@ -1,0 +1,10 @@
+65,67c65
+<       function cameraPushIn(tl, to, at, duration, ease = "power2.inOut") {
+<         tl.fromTo("#camera", { z: 0 }, { z: to, duration: duration, ease: ease }, at);
+<       }
+---
+>       
+77c75
+<       cameraPushIn(tl, 350, 0.5, 3);
+---
+>       tl.fromTo("#camera", { z: 0 }, { z: 350, duration: 3, ease: "power2.inOut" }, 0.5);

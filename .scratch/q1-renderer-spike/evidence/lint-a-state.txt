@@ -1,0 +1,6 @@
+◆  Linting a-state/index.html
+
+  ⚠ [C:\Users\nfbco\Documents\GITHUB\Product-Film-Studio\.scratch\q1-renderer-spike\a-state\index.html:37:9] nested_structure_needs_subcomposition [camera]: <div id="camera"> is a timeline element that contains nested <div id="surface-b">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.
+    Fix: Move <div id="camera"> and its contents into a sub-composition file and mount it with data-composition-src.
+
+◇  0 error(s), 1 warning(s)

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>Q1 Edit host</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!-- Library copied into the project (ADR 0004); used by the b-native Shot. -->
+    <script src="lib/primitives.js"></script>
+    <style>
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #07090d; }
+      #root { position: relative; width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-wwce" id="root" data-composition-id="edit" data-start="0" data-duration="32" data-width="1920" data-height="1080">
+      <div data-hf-id="hf-lxvs" id="shot-1" class="clip" data-composition-id="shot-a-state" data-composition-src="compositions/a-state.html" data-start="1" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+      <div data-hf-id="hf-yyki" id="shot-2" class="clip" data-composition-id="shot-b-native" data-composition-src="compositions/b-native.html" data-start="6" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+      <div data-hf-id="hf-kjmr" id="shot-3" class="clip" data-composition-id="shot-b3-helpers" data-composition-src="compositions/b3-helpers.html" data-start="11" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+      <div data-hf-id="hf-qmsn" id="shot-4" class="clip" data-composition-id="shot-b2-inline" data-composition-src="compositions/b2-inline.html" data-start="16" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="1"></div>
+      <div data-hf-id="hf-s2d8" id="shot-5" class="clip" data-composition-id="shot-c-hybrid" data-composition-src="compositions/c-hybrid.html" data-start="21" data-duration="4" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+      <div data-hf-id="hf-dofm" id="shot-6" class="clip" data-composition-id="shot-b2-inline" data-composition-src="compositions/b2-inline.html" data-start="25" data-duration="7" data-track-index="0" data-width="1920" data-height="1080" data-playback-start="0"></div>
+    </div>
+    <script>
+      // Edit-owned Transition: fade shot-2 in over the cut (literal tween).
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#shot-2", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 6);
+      window.__timelines["edit"] = tl;
+    </script>
+  </body>
+</html>

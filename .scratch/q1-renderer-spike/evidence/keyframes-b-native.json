@@ -1,0 +1,18 @@
+{
+  "project": "b-native",
+  "runtime": "all",
+  "compositions": [
+    {
+      "composition": "index.html",
+      "source": "index.html",
+      "tweens": [],
+      "traces": [],
+      "cssKeyframes": [],
+      "anime": []
+    }
+  ],
+  "_meta": {
+    "version": "0.8.141",
+    "updateAvailable": false
+  }
+}
