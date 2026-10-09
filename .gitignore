@@ -158,3 +158,16 @@ references/
 
 # Frames pulled from git-ignored references (client and third-party material)
 .scratch/scope-review/
+
+# Projects are their own repositories (ADR-0008)
+projects/
+
+# Client Screens copied into the look test
+.scratch/look-test/assets/
+
+# Look-test frames of client Screens and third-party clips
+.scratch/look-test/sheets/
+.scratch/look-test/review/
+
+# HyperFrames Studio thumbnail cache
+.thumbnails/

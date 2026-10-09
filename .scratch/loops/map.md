@@ -18,7 +18,9 @@ Goal: ship 3–5 portfolio Loops of the VR website that clearly beat the Steel H
 
 ## Fog
 
-- Whether HyperFrames + Three.js can get close to Ultramock at all (02, 06).
-- Render time with DOF and bloom at 60fps; GPU versus software WebGL in headless Chrome (02).
+- Whether HyperFrames + Three.js beats a paid Ultramock control (01, 06). Against the free tier's 1920×1440 still it matches on in-focus sharpness once tuned (02).
+- Temporal shimmer from the negative texture LOD bias: no aliasing measured, not yet judged by eye in motion (02).
+- Seam thresholds across machines: frame 0 is byte-identical on one machine and GPU; another GPU, SwiftShader or a Chrome update is untested (02, 06).
+- Depth of field with several Surfaces or a phone body under Three.js needs a real depth buffer; the look test used one analytic plane (07, 12).
 - Multi-Shot Loops under Three.js: one canvas or WebGL context per Shot sub-composition (12).
 - Whether a simple phone body is workable in CSS 3D (07, 08).

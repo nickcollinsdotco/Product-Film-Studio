@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE, throwaway (ticket 02 look test, Version 2: Three.js).
+  The VR website Screen on a bare tilted plane, dark void with Backlight,
+  one focus shift title -> rail, 4:3, 60fps, 5s.
+  Built by tools/build.mjs into index.html; __W__/__H__ are the frame size.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=__W__, height=__H__">
+    <title>PROTOTYPE look test v2 three</title>
+    <style>
+      html, body { margin: 0; width: __W__px; height: __H__px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; }
+      #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-iiw9" id="root" data-composition-id="look-v2" data-no-timeline="" data-start="0" data-duration="5" data-fps="60" data-width="__W__" data-height="__H__" data-composition-variables="[
+           {&quot;id&quot;:&quot;aperture&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;DOF aperture&quot;,&quot;default&quot;:6},
+           {&quot;id&quot;:&quot;bloom&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Bloom strength&quot;,&quot;default&quot;:0.12},
+           {&quot;id&quot;:&quot;grain&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Grain amount (sRGB)&quot;,&quot;default&quot;:0.03},
+           {&quot;id&quot;:&quot;grainSize&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Grain size px&quot;,&quot;default&quot;:1.0},
+           {&quot;id&quot;:&quot;dither&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Dither LSBs&quot;,&quot;default&quot;:1},
+           {&quot;id&quot;:&quot;backlight&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Backlight strength&quot;,&quot;default&quot;:0.05},
+           {&quot;id&quot;:&quot;lodBias&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Texture LOD bias&quot;,&quot;default&quot;:-0.5}
+         ]">
+      <canvas data-hf-id="hf-fdhf" id="gl" width="__W__" height="__H__"></canvas>
+    </div>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+      import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+      import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+      import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+
+      const W = __W__, H = __H__, FPS = 60, D = 5;
+      const S = W / 1600; // pixel-size scale relative to the 1600 baseline
+      const v = (window.__hyperframes && window.__hyperframes.getVariables) ? window.__hyperframes.getVariables() : {};
+      const o = window.__lookOverrides || {}; // PROTOTYPE: build-time A/B overrides (snapshot has no --variables)
+      const num = (k, d) => (k in o ? o[k] : Number.isFinite(Number(v[k])) ? Number(v[k]) : d);
+      const APERTURE = num("aperture", 3.5), BLOOM = num("bloom", 0.12), GRAIN = num("grain", 0.03);
+      const GRAIN_SIZE = num("grainSize", 1.0), DITHER = num("dither", 1), BACKLIGHT = num("backlight", 0.05);
+      const LOD_BIAS = num("lodBias", -0.5);
+
+      // Screen: 1512x982 @1x. World units are 1x px / 1000.
+      const SW = 1.512, SH = 0.982;
+      // Focus areas, 1x px boxes [x0, y0, x1, y1] (ticket 02, confirmed 2026-10-09).
+      const AREAS = {
+        title: [1000, 220, 1360, 660],
+        rail: [48, 685, 1464, 850],
+      };
+
+      const canvas = document.getElementById("gl");
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1);
+      renderer.setSize(W, H, false);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(28, W / H, 0.01, 50);
+
+      // Backlight: camera-facing glow card behind the Screen, radial falloff, brand pink.
+      const glowMat = new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        uniforms: { uStrength: { value: BACKLIGHT }, uColor: { value: new THREE.Color(0xff4f8b) } },
+        vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+        fragmentShader: `varying vec2 vUv; uniform float uStrength; uniform vec3 uColor;
+          void main(){ vec2 p = (vUv - 0.5) * 2.0; float r = length(p * vec2(1.0, 1.25));
+            float g = exp(-r * r * 3.0) * uStrength; gl_FragColor = vec4(uColor * g + vec3(0.02,0.022,0.03) * g, 1.0); }`,
+      });
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(SW * 1.7, SH * 1.7), glowMat);
+      glow.renderOrder = -1;
+
+      // Screen plane: map with mipmaps + anisotropy, rounded corners via SDF.
+      const tex = new THREE.TextureLoader().load("assets/hero@3x.png", () => renderAt(currentTime));
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.generateMipmaps = true;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      const screenMat = new THREE.ShaderMaterial({
+        transparent: true,
+        uniforms: { map: { value: tex }, uSize: { value: new THREE.Vector2(SW, SH) }, uRadius: { value: 0.018 }, uBias: { value: LOD_BIAS } },
+        vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+        fragmentShader: `varying vec2 vUv; uniform sampler2D map; uniform vec2 uSize; uniform float uRadius; uniform float uBias;
+          void main(){
+            vec4 c = texture2D(map, vUv, uBias);
+            vec2 p = (vUv - 0.5) * uSize; vec2 q = abs(p) - (uSize * 0.5 - uRadius);
+            float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uRadius;
+            float a = clamp(0.5 - d / fwidth(d), 0.0, 1.0);
+            gl_FragColor = vec4(c.rgb * a, a);
+          }`,
+      });
+      screenMat.blending = THREE.CustomBlending;
+      screenMat.blendSrc = THREE.OneFactor; screenMat.blendDst = THREE.OneMinusSrcAlphaFactor;
+      const screen = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), screenMat);
+
+      // Tilt: top recedes, text rises to the right (like Ultramock's showcase framing).
+      const rig = new THREE.Group();
+      rig.rotation.set(-0.58, 0.08, 0.17, "XYZ");
+      rig.add(screen);
+      scene.add(glow);
+      scene.add(rig);
+      rig.updateMatrixWorld(true);
+
+      const areaCenter = (b) => new THREE.Vector3(((b[0] + b[2]) / 2) / 1000 - SW / 2, SH / 2 - ((b[1] + b[3]) / 2) / 1000, 0);
+      const worldOf = (local) => local.clone().applyMatrix4(rig.matrixWorld);
+      const P_TITLE = worldOf(areaCenter(AREAS.title));
+      const P_RAIL = worldOf(areaCenter(AREAS.rail).add(new THREE.Vector3(0.12, 0, 0)));
+      // View direction: camera sits along +Z (screen tilt does the angle), slight downward look.
+      const VIEW_DIR = new THREE.Vector3(0.0, -0.18, 1).normalize();
+      const DIST_TITLE = 1.55, DIST_RAIL = 1.7;
+
+      // Post: render -> DOF (analytic plane depth) -> bloom -> grade (grain, dither, sRGB).
+      const rt = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 4 });
+      const composer = new EffectComposer(renderer, rt);
+      composer.setPixelRatio(1);
+      composer.setSize(W, H);
+      composer.addPass(new RenderPass(scene, camera, null, new THREE.Color(0x000000), 1));
+
+      const dofPass = new ShaderPass({
+        uniforms: {
+          tDiffuse: { value: null }, uRes: { value: new THREE.Vector2(W, H) },
+          uN: { value: new THREE.Vector3() }, uP: { value: new THREE.Vector3() },
+          uTan: { value: new THREE.Vector2() }, uZf: { value: 1 },
+          uAperture: { value: APERTURE * S }, uMaxCoc: { value: 18 * S },
+        },
+        vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+        fragmentShader: `
+          varying vec2 vUv; uniform sampler2D tDiffuse; uniform vec2 uRes;
+          uniform vec3 uN; uniform vec3 uP; uniform vec2 uTan; uniform float uZf; uniform float uAperture; uniform float uMaxCoc;
+          float cocAt(vec2 uv){
+            vec2 ndc = uv * 2.0 - 1.0;
+            vec3 d = normalize(vec3(ndc.x * uTan.x, ndc.y * uTan.y, -1.0));
+            float dn = dot(d, uN);
+            if (abs(dn) < 1e-5) return uMaxCoc;
+            float t = dot(uP, uN) / dn;
+            if (t <= 0.0) return uMaxCoc;
+            float z = t * -d.z;
+            return min(uMaxCoc, uAperture * abs(z - uZf) / z * 10.0);
+          }
+          void main(){
+            float coc = cocAt(vUv);
+            vec4 c0 = texture2D(tDiffuse, vUv);
+            if (coc < 0.5) { gl_FragColor = c0; return; }
+            const int N = 96; const float GA = 2.39996323;
+            vec3 acc = vec3(0.0); float wsum = 0.0;
+            for (int i = 0; i < N; i++) {
+              float fi = float(i) + 0.5;
+              float r = coc * sqrt(fi / float(N));
+              vec2 o = vec2(cos(fi * GA), sin(fi * GA)) * r / uRes;
+              acc += texture2D(tDiffuse, vUv + o).rgb; wsum += 1.0;
+            }
+            vec3 blurred = acc / wsum;
+            // Ease in from sharp so the in-focus band has no hard edge.
+            gl_FragColor = vec4(mix(c0.rgb, blurred, smoothstep(0.5, 1.5, coc)), 1.0);
+          }`,
+      });
+      composer.addPass(dofPass);
+
+      const bloomPass = new UnrealBloomPass(new THREE.Vector2(W, H), BLOOM, 0.6, 0.9);
+      composer.addPass(bloomPass);
+
+      const gradePass = new ShaderPass({
+        uniforms: {
+          tDiffuse: { value: null }, uRes: { value: new THREE.Vector2(W, H) }, uFrame: { value: 0 },
+          uGrain: { value: GRAIN }, uGrainSize: { value: GRAIN_SIZE * S }, uDither: { value: DITHER },
+        },
+        vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+        fragmentShader: `
+          varying vec2 vUv; uniform sampler2D tDiffuse; uniform vec2 uRes; uniform float uFrame;
+          uniform float uGrain; uniform float uGrainSize; uniform float uDither;
+          // Integer hash (deterministic, no sin precision issues).
+          float hash(vec3 p){ uvec3 q = uvec3(ivec3(p)) * uvec3(1597334673u, 3812015801u, 2798796415u);
+            uint n = (q.x ^ q.y ^ q.z) * 1597334673u; return float(n) * (1.0 / 4294967295.0); }
+          float srgb(float x){ return x <= 0.0031308 ? 12.92 * x : 1.055 * pow(x, 1.0/2.4) - 0.055; }
+          void main(){
+            vec3 lin = max(texture2D(tDiffuse, vUv).rgb, 0.0);
+            vec3 c = vec3(srgb(lin.r), srgb(lin.g), srgb(lin.b));
+            vec2 px = floor(vUv * uRes);
+            // Grain: per-cell gaussian-ish noise, seeded by frame index (t mod D), weighted to mid-tones.
+            vec2 cell = floor(px / max(uGrainSize, 1.0));
+            float g = (hash(vec3(cell, uFrame)) + hash(vec3(cell + 71.0, uFrame + 13.0)) - 1.0);
+            float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+            c += g * uGrain * (0.35 + 0.65 * (1.0 - abs(lum * 2.0 - 1.0)));
+            // TPDF dither, uDither LSBs.
+            float dth = (hash(vec3(px, uFrame + 101.0)) + hash(vec3(px + 37.0, uFrame + 211.0)) - 1.0) * uDither / 255.0;
+            gl_FragColor = vec4(clamp(c + dth, 0.0, 1.0), 1.0);
+          }`,
+      });
+      composer.addPass(gradePass);
+
+      const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * x * (x * (x * 6 - 15) + 10); };
+      // Timing: settle on title, shift 1.1s -> 3.6s, settle on rail. Slow drift throughout.
+      const SHIFT_START = 1.1, SHIFT_END = 3.6;
+      let currentTime = 0;
+
+      function renderAt(t) {
+        currentTime = t;
+        const frame = Math.round(t * FPS) % (D * FPS);
+        const k = smooth((t - SHIFT_START) / (SHIFT_END - SHIFT_START));
+        const target = P_TITLE.clone().lerp(P_RAIL, k);
+        const drift = new THREE.Vector3(Math.sin((t / D) * Math.PI * 2) * 0.006, 0, 0);
+        target.add(drift);
+        const dist = DIST_TITLE + (DIST_RAIL - DIST_TITLE) * k;
+        camera.position.copy(target).addScaledVector(VIEW_DIR, dist);
+        camera.lookAt(target);
+        camera.updateMatrixWorld(true);
+
+        // Backlight card sits behind the Screen, facing the camera.
+        const center = worldOf(new THREE.Vector3(0, 0, 0));
+        glow.position.copy(center).addScaledVector(VIEW_DIR, -0.35);
+        glow.quaternion.copy(camera.quaternion);
+
+        // DOF uniforms: Screen plane in view space, focus depth = distance to target.
+        const view = camera.matrixWorldInverse;
+        const nWorld = new THREE.Vector3(0, 0, 1).transformDirection(rig.matrixWorld);
+        const nView = nWorld.clone().transformDirection(view);
+        const pView = center.clone().applyMatrix4(view);
+        dofPass.uniforms.uN.value.copy(nView);
+        dofPass.uniforms.uP.value.copy(pView);
+        const tanY = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        dofPass.uniforms.uTan.value.set(tanY * camera.aspect, tanY);
+        dofPass.uniforms.uZf.value = -target.clone().applyMatrix4(view).z;
+        gradePass.uniforms.uFrame.value = frame;
+
+        composer.render();
+      }
+
+      window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+      renderAt(window.__hfThreeTime || 0);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE, throwaway (ticket 02 look test, Version 1: CSS screen-space ramp).
+  Same Screen, tilt, camera path and timing as Version 2: the plane's matrix3d is the
+  Three.js camera maths done by hand, so framing matches exactly. DOF is a screen-space
+  ramp of stacked backdrop-filter layers with gradient masks around the focus line.
+  Built by tools/build.mjs into index.html; __W__/__H__ are the frame size.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=__W__, height=__H__">
+    <title>PROTOTYPE look test v1 css</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      html, body { margin: 0; width: __W__px; height: __H__px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; }
+      #backlight { position: absolute; inset: 0; }
+      #stage { position: absolute; inset: 0; perspective: var(--f); perspective-origin: 50% 50%; }
+      #screen { position: absolute; left: 0; top: 0; width: 1512px; height: 982px; transform-origin: 0 0 0;
+                border-radius: 18px; overflow: hidden; backface-visibility: hidden; }
+      #screen img { display: block; width: 1512px; height: 982px; }
+      .dof { position: absolute; inset: 0; pointer-events: none; }
+      #grain { position: absolute; inset: 0; background-image: url("grain/grain-512.png"); background-size: 512px 512px;
+               mix-blend-mode: soft-light; opacity: 0.55; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-dwlq" id="root" data-composition-id="look-v1" data-start="0" data-duration="5" data-fps="60" data-width="__W__" data-height="__H__">
+      <div data-hf-id="hf-fcf8" id="backlight"></div>
+      <div data-hf-id="hf-1rt5" id="stage"><div data-hf-id="hf-ccvt" id="screen"><img data-hf-id="hf-qedu" src="assets/hero@3x.png" alt=""></div></div>
+      <div data-hf-id="hf-vbo6" class="dof" id="dof-1"></div>
+      <div data-hf-id="hf-rdk5" class="dof" id="dof-2"></div>
+      <div data-hf-id="hf-qlwc" class="dof" id="dof-3"></div>
+      <div data-hf-id="hf-e3dv" class="dof" id="dof-4"></div>
+      <div data-hf-id="hf-a59u" class="dof" id="dof-5"></div>
+      <div data-hf-id="hf-f6d6" id="grain"></div>
+    </div>
+    <script>
+      (function () {
+        const W = __W__, H = __H__, FPS = 60, D = 5, S = W / 1600;
+        const SW = 1.512, SH = 0.982, FOV = 28, APERTURE = 6, MAX_COC = 18 * S;
+        const AREAS = { title: [1000, 220, 1360, 660], rail: [48, 685, 1464, 850] };
+        const SHIFT_START = 1.1, SHIFT_END = 3.6, DIST_TITLE = 1.55, DIST_RAIL = 1.7;
+        const tanY = Math.tan((FOV / 2) * Math.PI / 180), F = (H / 2) / tanY;
+        document.getElementById("stage").style.setProperty("--f", F + "px");
+
+        // Minimal 4x4 maths (column-major, like three.js).
+        const mul = (a, b) => { const o = new Array(16).fill(0);
+          for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) o[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k]; return o; };
+        const app = (m, p) => [0, 1, 2].map((r) => m[r] * p[0] + m[4 + r] * p[1] + m[8 + r] * p[2] + m[12 + r]);
+        const rotX = (a) => [1,0,0,0, 0,Math.cos(a),Math.sin(a),0, 0,-Math.sin(a),Math.cos(a),0, 0,0,0,1];
+        const rotY = (a) => [Math.cos(a),0,-Math.sin(a),0, 0,1,0,0, Math.sin(a),0,Math.cos(a),0, 0,0,0,1];
+        const rotZ = (a) => [Math.cos(a),Math.sin(a),0,0, -Math.sin(a),Math.cos(a),0,0, 0,0,1,0, 0,0,0,1];
+        const sub = (a, b) => a.map((x, i) => x - b[i]), dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+        const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+        const norm = (a) => { const l = Math.hypot(...a); return a.map((x) => x / l); };
+        const RIG = mul(mul(rotX(-0.58), rotY(0.08)), rotZ(0.17)); // Euler XYZ, as in Version 2
+        const centerOf = (b) => [((b[0] + b[2]) / 2) / 1000 - SW / 2, SH / 2 - ((b[1] + b[3]) / 2) / 1000, 0];
+        const P_TITLE = app(RIG, centerOf(AREAS.title));
+        const P_RAIL = app(RIG, [centerOf(AREAS.rail)[0] + 0.12, centerOf(AREAS.rail)[1], 0]);
+        const VIEW_DIR = norm([0, -0.18, 1]);
+        const N_WORLD = app(RIG, [0, 0, 1]);
+        const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * x * (x * (x * 6 - 15) + 10); };
+
+        const screen = document.getElementById("screen"), backlight = document.getElementById("backlight");
+        const grain = document.getElementById("grain");
+        const dofs = [1, 2, 3, 4, 5].map((i) => document.getElementById("dof-" + i));
+        // Cumulative blur targets (px CoC) at which each layer switches on, and the layer's own blur so
+        // the stacked total (sqrt of sum of squares) tracks the CoC ramp.
+        const STEPS = [1.5, 4, 7.5, 12, 18].map((c) => c * S);
+        const LAYER_BLUR = STEPS.map((c, i) => Math.sqrt(c * c - (i ? STEPS[i - 1] ** 2 : 0)) * 0.5); // CSS blur() is a sigma; CoC is a radius
+        dofs.forEach((el, i) => { el.style.backdropFilter = `blur(${LAYER_BLUR[i].toFixed(2)}px)`; });
+        const hash = (n) => { n = (n ^ 61) ^ (n >>> 16); n = Math.imul(n, 9); n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); return (n ^ (n >>> 15)) >>> 0; };
+
+        const state = { k: 0 };
+        function render(t) {
+          const k = smooth((t - SHIFT_START) / (SHIFT_END - SHIFT_START));
+          const drift = Math.sin((t / D) * Math.PI * 2) * 0.006;
+          const target = P_TITLE.map((x, i) => x + (P_RAIL[i] - x) * k + (i === 0 ? drift : 0));
+          const dist = DIST_TITLE + (DIST_RAIL - DIST_TITLE) * k;
+          const eye = target.map((x, i) => x + VIEW_DIR[i] * dist);
+          // lookAt: camera -Z points at target, Y up.
+          const zA = norm(sub(eye, target)), xA = norm(cross([0, 1, 0], zA)), yA = cross(zA, xA);
+          const V = [xA[0], yA[0], zA[0], 0, xA[1], yA[1], zA[1], 0, xA[2], yA[2], zA[2], 0, -dot(xA, eye), -dot(yA, eye), -dot(zA, eye), 1];
+          // Element px -> plane local -> world -> view -> CSS stage space (x right, y down, z to viewer, viewer at z = F).
+          const L = [0.001, 0, 0, 0, 0, -0.001, 0, 0, 0, 0, 1, 0, -SW / 2, SH / 2, 0, 1];
+          const C = [1000, 0, 0, 0, 0, -1000, 0, 0, 0, 0, 1000, 0, W / 2, H / 2, F, 1];
+          const M = mul(C, mul(V, mul(RIG, L)));
+          screen.style.transform = `matrix3d(${M.map((x) => +x.toFixed(9)).join(",")})`;
+
+          // Backlight centred on the projected Screen centre.
+          const cv = app(V, app(RIG, [0, 0, 0]));
+          const cx = W / 2 + F * cv[0] / -cv[2], cy = H / 2 - F * cv[1] / -cv[2];
+          backlight.style.background = `radial-gradient(ellipse ${0.7 * W}px ${0.55 * W}px at ${cx}px ${cy}px, rgba(255,79,139,0.05), rgba(6,6,9,0.02) 60%, #000 100%)`;
+
+          // Screen-space CoC around the focus line: analytic plane depth at the target and one pixel away.
+          const nV = app([V[0],V[1],V[2],0, V[4],V[5],V[6],0, V[8],V[9],V[10],0, 0,0,0,1], N_WORLD), pV = cv;
+          const zf = -app(V, target)[2];
+          const coc = (sx, sy) => { const d = norm([(sx - W / 2) / F, -(sy - H / 2) / F, -1]); const dn = dot(d, nV);
+            const tt = dot(pV, nV) / dn; if (!(tt > 0)) return MAX_COC; const z = tt * -d[2];
+            return Math.min(MAX_COC, APERTURE * S * Math.abs(z - zf) / z * 10); };
+          const tv = app(V, target), tx = W / 2 + F * tv[0] / -tv[2], ty = H / 2 - F * tv[1] / -tv[2];
+          const e = 8, gx = (coc(tx + e, ty) - coc(tx - e, ty)) / (2 * e), gy = (coc(tx, ty + e) - coc(tx, ty - e)) / (2 * e);
+          // CoC is |depth - focus|, so its gradient flips across the line; use the depth-gradient direction instead.
+          const zAt = (sx, sy) => { const d = norm([(sx - W / 2) / F, -(sy - H / 2) / F, -1]); return dot(pV, nV) / dot(d, nV) * -d[2]; };
+          let dx = zAt(tx + e, ty) - zAt(tx - e, ty), dy = zAt(tx, ty + e) - zAt(tx, ty - e); const dl = Math.hypot(dx, dy); dx /= dl; dy /= dl;
+          const near = coc(tx - dx * 300 * S, ty - dy * 300 * S) / (300 * S), far = coc(tx + dx * 300 * S, ty + dy * 300 * S) / (300 * S);
+          const ang = Math.atan2(dx, -dy) * 180 / Math.PI; // CSS: 0deg points up, 90deg right
+          const len = Math.abs(W * Math.sin(ang * Math.PI / 180)) + Math.abs(H * Math.cos(ang * Math.PI / 180));
+          const t0 = (tx - W / 2) * dx + (ty - H / 2) * dy + len / 2;
+          dofs.forEach((el, i) => {
+            const a = t0 - STEPS[i] / near, b = t0 + STEPS[i] / far, soft = 40 * S;
+            const m = `linear-gradient(${ang}deg, #000 0px, #000 ${a - soft}px, transparent ${a}px, transparent ${b}px, #000 ${b + soft}px, #000 ${len}px)`;
+            el.style.maskImage = m; el.style.webkitMaskImage = m;
+          });
+
+          // Grain seeded from the frame index (t mod D).
+          const n = Math.round(t * FPS) % (D * FPS), h = hash(n + 1);
+          grain.style.backgroundPosition = `${h % 512}px ${(h >>> 9) % 512}px`;
+        }
+
+        const tl = gsap.timeline({ paused: true, onUpdate: () => render(tl.time()) });
+        tl.to(state, { k: 1, duration: D, ease: "none" }, 0);
+        render(0);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["look-v1"] = tl;
+      })();
+    </script>
+  </body>
+</html>
