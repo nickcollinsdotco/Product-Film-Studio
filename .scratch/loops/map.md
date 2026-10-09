@@ -16,6 +16,7 @@ Goal: ship 3–5 portfolio Loops of the VR website that clearly beat the Steel H
 - Studio extend reaches a Shot through the host clip's `data-duration`, not `root.dataset.duration` (stripped on mount); render stretches, preview needs a reload: [05](issues/05-studio-extend-duration.md).
 - The portfolio's Framer cards lazy-load video and pause off-screen, so the 6 MB cap is per Loop as it scrolls into view: [03](issues/03-portfolio-lazy-load.md).
 - Look test done: tuned Three.js matches the free Ultramock still on in-focus type, grain 0.03 survives 4–5 Mbps where dither alone bands, frame 0 is byte-identical on this machine; inputs for 06: [02](issues/02-look-test.md), [findings](../look-test/FINDINGS.md).
+- Focus areas: `<screen>.areas.json` sidecar, 1x px boxes at layout width, proposed by Claude from the image, approved on a labelled overlay; no capture step yet: [09](issues/09-focus-areas.md).
 - Grilling history (Rounds 7–9): [round 9 handoff](../handoffs/2026-10-09-round-9-handoff.md).
 
 ## Fog

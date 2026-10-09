@@ -1,8 +1,7 @@
 # Where Focus areas are stored and how they're written
 
 Type: grilling
-Status: open
-Blocked by: 06
+Status: resolved
 
 Probably Screen metadata in the ingest manifest (content, ADR-0003). Written by Claude proposing them from the image, or from DOM boxes in a Capture (ADR-0006); the user approves. `whole` is built in.
 
@@ -58,4 +57,14 @@ Source: HyperFrames 0.8.141 `capture`, read from the source, not run (`packages/
 - **Q4, coordinates:** 1x px at the Screen's layout width, with that width stored in the file (for example `"layoutWidth": 1512`). This is what the look test used. It reads naturally against the site and against Figma frames, both 1x px, and it holds for @2x and @3x exports. Normalised 0–1 values are harder to read and to sanity-check.
 - **Q5, approval:** Claude writes a single overlay image, the Screen with each area's labelled box drawn on it (drawn with PIL, because FFmpeg's `drawtext` crashes here). You approve or correct it in one reply. Framed snapshots then wait for the Draft render, where they come free. A small drag-to-adjust HTML page is possible later, only if correcting boxes in words becomes tedious.
 - **Q6, capture:** neither for now. Rough camera targets don't need DOM precision, and Claude proposing from the image works for both sources (tried in 02). Revisit when an area needs tight boxes. At that point two exact sources exist: the DOM, through our own Playwright step at the Screen's width and DPR 3 (`hyperframes capture` runs at 1920 wide and 1x), and Figma layer bounds through the Figma connector (not yet authorized).
+
+## Answer
+
+Decided by the user on 2026-10-09: all four of Claude's suggestions above are accepted. The original block on 06 is dropped, because these answers hold whether 06 says build or buy; if buy, they apply to the full-Film layer.
+
+- **Storage:** a sidecar next to each Screen, `<screen>.areas.json`. The ingest manifest points to it rather than copying it.
+- **Coordinates:** 1x px boxes at the Screen's layout width, with `layoutWidth` stored in the file.
+- **Who writes them:** Claude proposes areas from the image. For now they're rough camera targets, for both site and Figma Screens (about 60/40). `whole` is built in.
+- **Approval:** one overlay image of the Screen with labelled boxes (drawn with PIL). The user approves or corrects it in a reply.
+- **Capture:** no capture step for now. When exact boxes are needed, the sources are our own Playwright step (the Screen's width, DPR 3) for sites and Figma layer bounds for Figma.
 
