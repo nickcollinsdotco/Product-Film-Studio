@@ -14,6 +14,7 @@ Goal: ship 3–5 portfolio Loops of the VR website that clearly beat the Steel H
 - Vocabulary: [GLOSSARY.md](../../GLOSSARY.md). Brief templates: [docs/brief-template/](../../docs/brief-template/).
 - 2026-10-09: the paid Ultramock control (01) is deferred for time and money. The look test (02) runs without it, against a free-tier export if one exists, otherwise the Ultramock showcase clips and the Steel Hat phone clip. Build or buy (06) still waits for 01.
 - Studio extend reaches a Shot through the host clip's `data-duration`, not `root.dataset.duration` (stripped on mount); render stretches, preview needs a reload: [05](issues/05-studio-extend-duration.md).
+- The portfolio's Framer cards lazy-load video and pause off-screen, so the 6 MB cap is per Loop as it scrolls into view: [03](issues/03-portfolio-lazy-load.md).
 - Grilling history (Rounds 7–9): [round 9 handoff](../handoffs/2026-10-09-round-9-handoff.md).
 
 ## Fog
