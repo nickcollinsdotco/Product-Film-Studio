@@ -22,4 +22,4 @@ Turn one screenshot (a full-page website capture or a Figma frame export) into a
 npm run quick        # -> http://localhost:4321
 ```
 
-Drop an image, pick a background colour and settings, drag a focus area on the thumbnail (optional: the shot scrolls to it and zooms in), then Render. MP4s land in `renders/quick/`.
+Drop an image (or capture a URL: common cookie banners are hidden, and you can list extra CSS selectors to hide), pick a background colour and settings, drag a focus area on the thumbnail (optional: zoom in at the end, open on it and pull out, or zoom in and out before scrolling) and drag the dashed line to set where scrolling stops, then Render. MP4s land in `renders/quick/`; temporary render files are deleted after each render, and uploads unused for 7 days are deleted when the server starts.

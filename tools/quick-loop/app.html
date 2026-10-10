@@ -23,11 +23,15 @@
       .swatches button.on { border-color: #fff; }
       .swatches input[type=color] { width: 28px; height: 26px; padding: 0; border: 0; background: none; }
       #drop { border: 1px dashed #3a404a; border-radius: 8px; padding: 14px; text-align: center; color: var(--muted); cursor: pointer; }
+      .row { display: flex; gap: 6px; }
+      .row input { flex: 1; }
       #drop.over { border-color: var(--accent); color: #fff; }
       #picker { position: relative; max-height: 340px; overflow-y: auto; border-radius: 6px; border: 1px solid var(--line); display: none; cursor: crosshair; user-select: none; }
       #pickarea { position: relative; }
       #picker img { display: block; width: 100%; pointer-events: none; }
       #box { position: absolute; border: 2px solid var(--accent); background: rgba(91,140,255,.18); display: none; pointer-events: none; }
+      #limit { position: absolute; left: 0; right: 0; bottom: 0; border-top: 2px dashed #ffb020; background: rgba(0,0,0,.55); cursor: ns-resize; }
+      #limit span { position: absolute; right: 4px; top: 0; transform: translateY(-50%); background: #ffb020; color: #111; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 8px; pointer-events: none; }
       .hint { color: var(--muted); font-size: 12px; }
       main { display: grid; grid-template-rows: 1fr auto; min-width: 0; min-height: 0; }
       #stagewrap { position: relative; overflow: hidden; display: grid; place-items: center; background: repeating-conic-gradient(#101317 0 25%, #0d1013 0 50%) 0 0 / 24px 24px; }
@@ -47,8 +51,10 @@
         <h2>Screen image</h2>
         <div id="drop">Drop a screenshot or Figma export here,<br>click to choose, or paste</div>
         <input id="file" type="file" accept="image/*" hidden>
-        <div id="picker"><div id="pickarea"><img id="thumb" alt=""><div id="box"></div></div></div>
-        <div class="hint" id="focushint" hidden>Drag on the image to set a focus area. <button id="clearfocus">Clear</button></div>
+        <div class="row"><input id="url" type="text" placeholder="…or capture a URL"><button id="capture">Capture</button></div>
+        <input id="hide" type="text" placeholder="Hide on capture (CSS): .popup, #chat-widget" title="Comma-separated CSS selectors to hide. Common cookie banners are hidden automatically.">
+        <div id="picker"><div id="pickarea"><img id="thumb" alt=""><div id="box"></div><div id="limit"><span></span></div></div></div>
+        <div class="hint" id="focushint" hidden>Drag on the image to set a focus area; drag the dashed line to set where scrolling stops. <button id="clearfocus">Clear focus</button></div>
       </section>
 
       <section>
@@ -88,7 +94,15 @@
 
       <section>
         <h2>Motion</h2>
-        <label><span>Zoom into focus area</span><input id="zoom" type="checkbox" checked></label>
+        <label><span>Focus area</span>
+          <select id="focusMove">
+            <option value="end">Scroll, then zoom in</option>
+            <option value="start">Start zoomed in, pull out, scroll</option>
+            <option value="inout">Zoom in and out, then scroll</option>
+            <option value="scroll">Just scroll to it</option>
+          </select>
+        </label>
+        <label><span>Scroll to <b id="limitv"></b></span><input id="scrollLimit" type="range" min="0.05" max="1" step="0.01" value="1"></label>
         <label><span>Return to start (seamless loop)</span><input id="loopBack" type="checkbox"></label>
       </section>
     </aside>
@@ -124,9 +138,13 @@
           name: $("name").value, width, height, duration: Number($("duration").value), quality: $("quality").value,
           backdrop: $("backdrop").value, viewport: $("viewport").value, frame: $("frame").value,
           screenWidth: Number($("screenWidth").value), radius: Number($("radius").value), tilt: Number($("tilt").value),
-          shadow: $("shadow").checked, zoom: $("zoom").checked, loopBack: $("loopBack").checked,
+          shadow: $("shadow").checked, focusMove: $("focusMove").value, scrollLimit: Number($("scrollLimit").value), loopBack: $("loopBack").checked,
         });
         $("durv").textContent = cfg.duration + "s";
+        $("limitv").textContent = Math.round(cfg.scrollLimit * 100) + "%";
+        $("limit").style.top = cfg.scrollLimit * 100 + "%";
+        $("limit").style.display = cfg.scrollLimit < 1 ? "block" : "none";
+        $("limit").firstChild.textContent = "Scroll ends · " + Math.round(cfg.scrollLimit * 100) + "%";
       }
 
       function fit() {
@@ -156,18 +174,29 @@
         requestAnimationFrame(tick);
       })(performance.now());
 
-      // Image upload: drop, click, paste.
+      // Image upload: drop, click, paste, or capture a URL.
       async function useFile(file) {
         if (!file || !file.type.startsWith("image/")) return;
         $("drop").textContent = "Uploading…";
-        const r = await fetch("/upload", { method: "POST", body: file });
-        const img = await r.json();
-        if (img.error) { $("drop").textContent = "Upload failed: " + img.error; return; }
+        useImage(await (await fetch("/upload", { method: "POST", body: file })).json(), file.name);
+      }
+      $("capture").onclick = async () => {
+        const url = $("url").value.trim();
+        if (!url) return;
+        $("capture").disabled = true;
+        $("drop").textContent = "Capturing " + url + "… (scrolls the whole page, can take a while)";
+        const body = JSON.stringify({ url, viewport: $("viewport").value, hide: $("hide").value });
+        useImage(await (await fetch("/capture", { method: "POST", body })).json(), url.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-"));
+        $("capture").disabled = false;
+      };
+      $("url").onkeydown = (e) => { if (e.key === "Enter") $("capture").click(); };
+      function useImage(img, label) {
+        if (img.error) { $("drop").textContent = "Failed: " + img.error; return; }
         cfg.image = { url: img.url, w: img.w, h: img.h };
-        cfg.focus = null; $("box").style.display = "none";
-        if ($("name").value === "loop") $("name").value = file.name.replace(/\.[^.]+$/, "") || "loop";
+        cfg.focus = null; $("box").style.display = "none"; $("scrollLimit").value = 1;
+        if ($("name").value === "loop") $("name").value = label.replace(/\.[^.]+$/, "") || "loop";
         $("thumb").src = img.url; $("picker").style.display = "block"; $("focushint").hidden = false;
-        $("drop").textContent = `${file.name} · ${img.w}×${img.h} (drop another to replace)`;
+        $("drop").textContent = `${label} · ${img.w}×${img.h} (drop another to replace)`;
         t = 0; update();
       }
       const drop = $("drop");
@@ -183,13 +212,20 @@
       let start = null;
       const pos = (e) => { const r = $("thumb").getBoundingClientRect(); return { x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) }; };
       const drawBox = (f) => Object.assign(box.style, { display: "block", left: f.x * 100 + "%", top: f.y * 100 + "%", width: f.w * 100 + "%", height: f.h * 100 + "%" });
+      let draggingLimit = false;
+      const setLimit = (y) => { $("scrollLimit").value = Math.min(1, Math.max(0.05, y)); update(); };
+      $("limit").onmousedown = (e) => { draggingLimit = true; e.preventDefault(); e.stopPropagation(); };
+      // Moving the slider brings the line into view in the thumbnail.
+      $("scrollLimit").addEventListener("input", () => { picker.scrollTop = cfg.scrollLimit * $("thumb").clientHeight - picker.clientHeight / 2; });
       picker.onmousedown = (e) => { start = pos(e); e.preventDefault(); };
       window.addEventListener("mousemove", (e) => {
+        if (draggingLimit) return setLimit(pos(e).y);
         if (!start) return;
         const p = pos(e);
         drawBox({ x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) });
       });
       window.addEventListener("mouseup", (e) => {
+        draggingLimit = false;
         if (!start) return;
         const p = pos(e), f = { x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) };
         start = null;

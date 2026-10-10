@@ -48,7 +48,9 @@
           frame: "browser",       // "browser" | "none"
           radius: 14, shadow: true, tilt: 8,
           focus: null,            // { x, y, w, h } as fractions of the image
-          zoom: true, loopBack: false,
+          focusMove: "end",       // "end" scroll then zoom in | "start" open zoomed, pull out, scroll | "inout" zoom in, out, scroll | "scroll" no zoom
+          scrollLimit: 1,         // where the bottom of the last view stops, as a fraction of the image height
+          loopBack: false,
         };
         const $ = (id) => document.getElementById(id);
         let cfg = { ...DEFAULTS }, geo = null, time = 0;
@@ -81,29 +83,35 @@
           const maxScroll = Math.max(0, ih - vh);
           const left = (W - cw) / 2, top = (H - ch) / 2;
 
-          let scrollEnd = maxScroll, zoomTo = null;
+          const limit = Math.min(maxScroll, Math.max(0, cfg.scrollLimit * ih - vh));
+          let fs = 0, zoomTo = null; // fs: scroll that centres the focus area
           if (cfg.focus) {
             const f = cfg.focus;
             const fy = (f.y + f.h / 2) * ih;
-            scrollEnd = Math.min(maxScroll, Math.max(0, fy - vh / 2));
-            if (cfg.zoom) {
+            fs = Math.min(maxScroll, Math.max(0, fy - vh / 2));
+            if (cfg.focusMove !== "scroll") {
               const fw = f.w * cw, fh = Math.min(f.h * ih, vh);
               const Z = Math.min(2.5, Math.max(1, Math.min((W * 0.72) / fw, (H * 0.72) / fh)));
               const cx = left + (f.x + f.w / 2) * cw;
-              const cy = top + bh + Math.min(vh, Math.max(0, fy - scrollEnd));
+              const cy = top + bh + Math.min(vh, Math.max(0, fy - fs));
               zoomTo = { Z, cx, cy };
             }
           }
 
           // Keyframes: [time fraction, scroll px, zoom 0..1, tilt 0..1]
-          const T = cfg.tilt ? 1 : 0, settle = zoomTo ? 0 : 0.35 * T;
-          let keys = zoomTo
-            ? [[0, 0, 0, T], [0.12, 0, 0, T], [0.55, scrollEnd, 0, 0.5 * T], [0.78, scrollEnd, 1, 0], [1, scrollEnd, 1, 0]]
-            : [[0, 0, 0, T], [0.12, 0, 0, T], [0.85, scrollEnd, 0, settle], [1, scrollEnd, 0, settle]];
+          const T = cfg.tilt ? 1 : 0, rest = 0.35 * T;
+          const end = Math.max(fs, limit); // after a focus at the start, keep scrolling down to the limit
+          const move = zoomTo ? cfg.focusMove : "none";
+          let keys = {
+            none: [[0, 0, 0, T], [0.12, 0, 0, T], [0.85, cfg.focus ? fs : limit, 0, rest], [1, cfg.focus ? fs : limit, 0, rest]],
+            end: [[0, 0, 0, T], [0.12, 0, 0, T], [0.55, fs, 0, 0.5 * T], [0.78, fs, 1, 0], [1, fs, 1, 0]],
+            start: [[0, fs, 1, 0], [0.15, fs, 1, 0], [0.38, fs, 0, 0.6 * T], [0.88, end, 0, rest], [1, end, 0, rest]],
+            inout: [[0, fs, 0, T], [0.08, fs, 0, T], [0.28, fs, 1, 0], [0.42, fs, 1, 0], [0.58, fs, 0, 0.6 * T], [0.9, end, 0, rest], [1, end, 0, rest]],
+          }[move];
           if (cfg.loopBack) { // forward in the first ~55%, hold, return, end on frame 0's state
             const fwd = keys.map(([t, ...v]) => [t * 0.55, ...v]);
-            const last = fwd[fwd.length - 1];
-            keys = [...fwd, [0.68, ...last.slice(1)], [0.94, 0, 0, T], [1, 0, 0, T]];
+            const last = fwd[fwd.length - 1], first = fwd[0];
+            keys = [...fwd, [0.68, ...last.slice(1)], [0.94, ...first.slice(1)], [1, ...first.slice(1)]];
           }
           geo = { W, H, cw, ch, vh, bh, left, top, ih, zoomTo, keys };
         }
