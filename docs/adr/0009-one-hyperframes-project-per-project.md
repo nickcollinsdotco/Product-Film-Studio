@@ -2,6 +2,8 @@
 
 > **Loops (2026-10-09, [ADR-0010](0010-loops-are-the-default-output.md)):** a Loop's Brief is its Loop card in the Project sheet, and it has no Shot list, so a Loop's folder holds only its Edit entry files (`edit-4x3.html`).
 
+> **v1 (2026-10-11, [ADR-0012](0012-v1-is-light-css-loops.md)):** a Loop has one entry file. Its frame size is chosen at export, which stamps it into a temporary copy of the entry for `hyperframes render` and deletes the copy afterwards. No entry file per ratio.
+
 A Project is a single HyperFrames project. Product brand, assets, the synced Library and one-off Shot templates sit at its root. Each Film is a folder (`films/<film>/`) holding its Brief, Shot list and one top-level entry file per Edit (`edit-16x9.html`, `edit-9x16.html`). The alternative, one HyperFrames project per Film, would duplicate brand and assets for every Film.
 
 This relies on HyperFrames Studio listing every top-level entry file, including ones in subfolders, and opening or rendering each one (verified 2026-10-08 on 0.8.141). The CLI's `hyperframes compositions` lists only `index.html`, so scripts render Edits explicitly with `hyperframes render --composition films/<film>/edit-16x9.html`.

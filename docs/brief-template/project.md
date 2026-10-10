@@ -35,20 +35,22 @@ Values already filled in are the defaults. Change only what differs.
 
 ## 3. Look (optional)
 
+v1 defaults ([ADR-0012](../adr/0012-v1-is-light-css-loops.md)): CSS 3D in the Steel Hat style, no depth of field or grain.
+
 | Setting | Default | This Project |
 |---|---|---|
 | Device frame | None (bare plane) | |
-| Backdrop | Backlight: dark void, soft glow in the brand accent | |
-| Focus | Shallow, slow rack between focus areas | |
+| Backdrop | Brand colour if the brand has a strong one, otherwise Backlight | |
+| Focus | None: everything sharp (no depth of field in v1) | |
 | Camera | One slow move per Shot | |
 | Text | None: the product's own type does the talking | |
 | Sound | None: Loops are silent; music only for full Films | |
-| Edits | 4:3 only (16:9 and 9:16 on request) | |
+| Frame size | Chosen at export: 16:9, 9:16, 1:1, 4:5 or 4:3 (1600 px long edge), or custom | |
 | Avoid | Device spins, fast whips, fake UI | |
 
-<!-- Device frame: none | browser | phone | laptop. For now Loops use none or phone (a simple phone body with real thickness, not photoreal). A portrait phone in a 4:3 frame leaves a lot of empty Backdrop, so check the composition on the first render.
-Backdrop: void (flat near-black) | Backlight (near-black, soft glow in the brand accent) | studio light (pale grey gradient, as in the Vercel reference) | brand colour (flat Product brand colour, as in the Steel Hat clip). Type colour is chosen for contrast against the Backdrop.
-Edits: this row is for Loops. Full Films keep 16:9 and 9:16 (see film-brief.md).
+<!-- Device frame: none | browser | phone in v1 (laptop later). The phone is a PNG bezel, tilted about 20° at most. A portrait phone in a landscape frame leaves a lot of empty Backdrop, so check the composition on the first render.
+Backdrop: brand colour (flat Product brand colour, as in the Steel Hat clips) | void (flat near-black) | Backlight (near-black, soft glow in the brand accent). Studio light (pale grey gradient) comes later. Type colour is chosen for contrast against the Backdrop.
+Frame size: an export setting, not a separate file. A Loop comes from one source and is exported at any preset; it isn't guaranteed to look equally good in every ratio, so check each one you use.
 Only fill the right-hand column where this Project breaks a default, e.g. a light product shot in studio light. -->
 
 ## 4. Screens (required)
@@ -88,14 +90,11 @@ A good first slate is 3 to 5 Loops (one per strong Screen or feature) and, if th
 
 ## Loops
 
-<!-- Copy the card below for each Loop. Only the first three fields are required; the rest fall back to the Look table above.
+<!-- Copy the card below for each Loop. Only Screen and Focus path are required; the rest fall back to the Look table above.
 
-Loops skip the Shot list and Contact sheet: the focus path is the Shot list. Draft render all the Project's Loops in one batch, with stills at each focus arrival, and review them together at card size on one page. The only approval gate is the Final render.
+Loops skip the Shot list and Contact sheet: the focus path is the Shot list. A half-size Draft render checks composition and motion; a Loop only ships after a Final render at full size. (Batch Draft renders and a review page wait until a Project has at least two Loops.)
 
-The bar on the portfolio is the Steel Hat phone clip (references/own/steel-hat-phone.mp4); it sits on the review page next to the Loops, at the same display height. A Loop ships only if:
-- its Seam passes its shape's check;
-- in-focus type is visibly sharper, judged on paused frames;
-- its motion lands on a named focus area.
+The guide on the portfolio is the Steel Hat phone clip (references/own/steel-hat-phone.mp4); compare it side by side with each Loop, at the same display height. A Loop ships when it looks right at card size next to it and, if it's a Bookend, its Seam passes the check.
 
 Every Loop opens on a lit, settled framing. Frame 0 is the poster when autoplay is blocked (Safari Low Power, reduced motion) and the first thing seen on every repeat, so a separate poster image doesn't fix a dark opening.
 
@@ -104,7 +103,7 @@ Shapes. Pick one:
 - Tour: moves from area to area and never returns to its opening framing. (Evil Charts, Steel Hat)
 Every Loop closes with a seam from its last Shot back to its first: a cut by default, a dissolve allowed.
 
-Shot templates, taken from the reference clips. Leave the card's field blank and each Shot's template is inferred: a Shot that ends on one area (whole included) is a Hold, and one that passes through two or more named areas (not counting whole) is a Drift. Name a template to override:
+Shot templates, taken from the reference clips. v1 has Scroll and Hold only; Reveal, Drift and Orbit come later. Leave the card's field blank and each Shot's template is inferred: a Shot that moves down a tall Screen and lands on an area (optionally zooming in) is a Scroll; one that stays on one area (whole included) is a Hold. A sideways move between two areas without scrolling isn't in v1 (it would be a Drift): name a different path. Name a template to override:
 - Hold: ends on one area with one slow move, including a push-in from whole or a pull-out to it. The default Shot.
 - Reveal: open on a fragment (a corner, an edge, a dark screen) and push or pull until the whole view is there. Never inferred, because a fragment isn't a named area: name it in Shot templates. Only after a cut, never as a Loop's first Shot.
 - Drift: passes through two or more named areas on a tilted plane, shallow focus, focus racking between them. (Evil Charts)
@@ -128,8 +127,10 @@ Worked example, adapted from the TLDR reference:
 - **Focus path:**
 - **Shape:** Bookend
 - **Shot templates:**
+- **Device frame:** project default
 - **Look:** project default
-- **Edits:** project default
+- **Primary frame size:** 16:9
+- **Other frame sizes:**
 - **Length:** 8 to 12s
 
 <!-- Screen: one row from section 4. One Screen per Loop keeps it a Loop; two or more and it is drifting toward a full Film.
@@ -137,6 +138,7 @@ Notice: the one thing a viewer should take away, in a short line. If you cannot 
 Focus path: 2 to 4 focus areas of the Screen, in order. `→` moves within a Shot; `/` cuts to the next Shot. Name what is there ("leaderboard", "Pro card"), not coordinates; `whole` is the full Screen and never needs drawing. A Bookend starts and ends on the same area, usually whole.
 Shape: Bookend or Tour.
 Shot templates: optional, one per Shot. Leave blank to infer them from the focus path.
-Edits: 16:9 and 9:16 only on request; 9:16 usually drops the widest Shot and starts closer.
+Primary frame size: the size the Loop's source previews at in Studio and exports at by default. Set it explicitly; it isn't taken from list order.
+Other frame sizes: further presets to export (16:9, 9:16, 1:1, 4:5, 4:3, or custom). The Shot templates lay the Loop out for each; there are no per-ratio Shots in v1. In portrait, a browser frame's viewport grows to fill the height.
 Text: add a "Text:" line only if the Loop needs a word the UI does not already say.
 Logo: add "Logo: corner" only for client deliveries that travel without a page around them. -->

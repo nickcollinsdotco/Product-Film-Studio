@@ -34,3 +34,6 @@ Findings note: [`.scratch/look-test/FINDINGS.md`](../../look-test/FINDINGS.md). 
 
 Reviewed and accepted by the user on 2026-10-09 (tuned review MP4 "looks alright"; no shimmer seen). Inputs for 06 (user decisions): resolution, Seam thresholds, grain policy and cap, and whether Version 2 beats a paid control.
 
+## Comments
+
+**2026-10-10.** Not used by v1 (ADR-0012): the findings are kept for the later Three.js version.

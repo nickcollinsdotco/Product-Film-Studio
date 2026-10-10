@@ -23,3 +23,7 @@ Done when: the served size and bitrate are recorded here, and the X version's si
 - **960×720, 60fps.** We downscale ourselves rather than upload 1600 and let X's scaler do it. That's one resample we control instead of an unknown one. Bigger uploads buy nothing.
 - **Grain and dither don't survive X at about 350 kbps.** The X version gets no grain policy of its own; banding on X is accepted.
 - **Untested:** whether a native 960×720 upload looks better than X's downscale of 1600, and whether X Premium unlocks a bigger variant. Retest when the first real Loop is posted.
+
+## Comments
+
+**2026-10-10.** No X-specific version for now (ADR-0012): the 960×720 finding is kept for when a real post looks bad.
