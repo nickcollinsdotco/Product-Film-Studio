@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!--
+  Scroll Shot template: moves down or up the Screen and lands on a Focus area,
+  optionally zooming in on it. Opens on the previous Shot's closing state, or on
+  `from` after a cut (or as the first Shot).
+  Variables: screen (path), screenWidth, screenHeight (px), from, to (Focus area
+  names from the Screen's .areas.json sidecar; `whole` is the top), zoom.
+  The Loop entry loads gsap, the Project settings and the Library before this runs.
+-->
+<html lang="en" data-composition-variables='[
+  {"id":"screen","type":"string","label":"Screen","default":""},
+  {"id":"screenWidth","type":"number","label":"Screen width","default":1440},
+  {"id":"screenHeight","type":"number","label":"Screen height","default":900},
+  {"id":"from","type":"string","label":"From Focus area","default":"whole"},
+  {"id":"to","type":"string","label":"To Focus area","default":"whole"},
+  {"id":"zoom","type":"boolean","label":"Zoom in","default":false}
+]'>
+  <head>
+    <meta charset="UTF-8">
+    <title>Scroll</title>
+  </head>
+  <body>
+    <div id="scroll-root" data-composition-id="scroll" data-duration="4" data-width="1600" data-height="900">
+      <script>
+        window.__timelines = window.__timelines || {};
+        window.__timelines["scroll"] = window.Shot.run(document.getElementById("scroll-root"), __hyperframes.getVariables());
+      </script>
+    </div>
+  </body>
+</html>

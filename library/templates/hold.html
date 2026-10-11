@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
   Hold Shot template: stays on one Focus area with one slow move.
-  Variables: screen (path), screenWidth, screenHeight (px), focus (only "whole"
-  for now), move ("push-in" | "pull-out" | "tilt-settle").
+  Variables: screen (path), screenWidth, screenHeight (px), focus (a Focus area
+  name, default "whole"), move ("push-in" | "pull-out" | "tilt-settle").
   The Loop entry loads gsap, the Project settings and the Library before this runs.
 -->
 <html lang="en" data-composition-variables='[
@@ -20,7 +20,7 @@
     <div id="hold-root" data-composition-id="hold" data-duration="4" data-width="1600" data-height="900">
       <script>
         window.__timelines = window.__timelines || {};
-        window.__timelines["hold"] = window.Shot.run(document.getElementById("hold-root"), "hold", __hyperframes.getVariables());
+        window.__timelines["hold"] = window.Shot.run(document.getElementById("hold-root"), __hyperframes.getVariables());
       </script>
     </div>
   </body>

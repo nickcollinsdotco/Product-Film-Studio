@@ -35,3 +35,20 @@ test("a Draft export renders at half the primary Frame size, at the Loop's durat
     rmSync(outDir, { recursive: true, force: true });
   }
 });
+
+test("a multi-Shot Draft export renders at the Loop's full duration and leaves no temporary files", { timeout: 300_000 }, async () => {
+  sync(project);
+  const before = listFiles(project);
+  const outDir = mkdtempSync(join(repo, "renders", "export-test-"));
+  try {
+    const { output } = await exportLoop({ project, entry: "films/fixture/hold-scroll.html", outDir, quiet: true });
+    const v = probe(output);
+    assert.equal(v.width, 800);
+    assert.equal(v.height, 450);
+    assert.ok(Math.abs(v.duration - 8.5) < 0.05, `duration ${v.duration}`);
+    assert.deepEqual(listFiles(project), before, "the Project is unchanged after export");
+    assert.deepEqual(readdirSync(outDir), ["hold-scroll-800x450-draft.mp4"]);
+  } finally {
+    rmSync(outDir, { recursive: true, force: true });
+  }
+});
