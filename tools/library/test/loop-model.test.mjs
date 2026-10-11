@@ -62,6 +62,12 @@ const onScreen = (st, name) => {
   return { x: frame.width / 2 + st.zoom * (x - st.cx), y: frame.height / 2 + st.zoom * (y - st.cy) };
 };
 
+test("frame rate doesn't change state at a given t: frame n at 30fps is frame 2n at 60fps", () => {
+  const loop = fixture(1);
+  const at = (fps, n) => sceneAt(loop, n / fps);
+  for (let n = 0; n <= 8.5 * 30; n += 17) sameState(at(30, n), at(60, 2 * n), `t ${n / 30}`);
+});
+
 test("each Shot opens on the previous Shot's closing state", () => {
   const loop = fixture(1);
   for (const i of [1, 2]) sameState(shotAt(loop, i, 0), shotAt(loop, i - 1, loop.shots[i - 1].duration), `Shot ${i + 1}`);
