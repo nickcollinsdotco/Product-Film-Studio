@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- Fixture Loop: one Hold Shot pushing in on the whole Screen. Primary Frame size: Landscape. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1600, height=900">
+    <title>Fixture: Hold Loop</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="project-settings.js"></script>
+    <script src="library/project-settings.js"></script>
+    <script src="library/loop-model.js"></script>
+    <script src="library/css-renderer.js"></script>
+    <script src="library/shot.js"></script>
+    <style>
+      html, body { margin: 0; overflow: hidden; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-vh0n" id="root" data-composition-id="fixture-hold" data-start="0" data-duration="4" data-width="1600" data-height="900">
+      <div data-hf-id="hf-va8m" id="shot-1" class="clip" data-composition-id="hold" data-composition-src="library/templates/hold.html" data-start="0" data-duration="4" data-track-index="0" data-width="1600" data-height="900" data-variable-values="{&quot;screen&quot;:&quot;screens/fixture.png&quot;,&quot;screenWidth&quot;:1440,&quot;screenHeight&quot;:2400,&quot;focus&quot;:&quot;whole&quot;,&quot;move&quot;:&quot;push-in&quot;}"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["fixture-hold"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

@@ -10,7 +10,11 @@
     "check:poc": "hyperframes check films/poc",
     "preview:poc": "hyperframes preview films/poc",
     "render:poc": "hyperframes render films/poc --output renders/poc.mp4",
-    "quick": "node tools/quick-loop/server.mjs"
+    "quick": "node tools/quick-loop/server.mjs",
+    "test": "node --test tools/library/test/*.test.mjs",
+    "library:sync": "node tools/library/sync.mjs",
+    "library:export": "node tools/library/export.mjs",
+    "preview:fixture": "hyperframes preview fixtures/hold-loop"
   },
   "devDependencies": {
     "hyperframes": "0.8.141",

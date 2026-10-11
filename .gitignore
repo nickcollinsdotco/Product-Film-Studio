@@ -171,3 +171,6 @@ projects/
 
 # HyperFrames Studio thumbnail cache
 .thumbnails/
+
+# The Library copy synced into the fixture Project (npm run library:sync fixtures/hold-loop)
+fixtures/*/library/

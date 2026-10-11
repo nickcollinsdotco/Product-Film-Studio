@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!-- HyperFrames needs an index.html to treat this folder as a project. The Loops are entry files under films/; open them in Studio's composition list. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1600, height=900">
+    <title>Fixture Project</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>html, body { margin: 0; overflow: hidden; background: #ff7a59; }</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="index" data-start="0" data-duration="1" data-width="1600" data-height="900"></div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["index"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>
