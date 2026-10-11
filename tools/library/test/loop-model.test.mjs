@@ -112,3 +112,65 @@ test("a Focus path with a sideways move between areas is rejected with a message
   assert.throws(() => inferShots("hero → hero-art", frame, tall), /"hero" → "hero-art" is a sideways move/);
   assert.throws(() => inferShots("hero → nowhere", frame, tall), /Unknown Focus area "nowhere"/);
 });
+
+// Seam check (Bookends): pose, movement continuity and duplicate frame, on scene state.
+const { seamCheck, seamOf } = globalThis.LoopModel;
+const still = { scroll: 0, zoom: 1, cx: 800, cy: 450, tilt: 0 };
+const D = 2, fps = 60, dt = 1 / fps;
+// The VR Bookend's shape on the fixture Screen: Hold on the hero, Scroll to a card, back.
+const bookend = sequence([
+  ["hold", 2, { focus: "hero", move: "push-in" }],
+  ["scroll", 3, { from: "hero", to: "card-2" }],
+  ["scroll", 2.5, { from: "card-2", to: "hero" }],
+]);
+
+test("Seam pose: a Bookend that ends on its opening framing passes; one that ends elsewhere fails", () => {
+  const ok = seamOf(bookend, { fps });
+  assert.deepEqual(ok.failures, []);
+  assert.equal(ok.pass, true);
+  const broken = seamOf(sequence([["hold", 2, { focus: "hero", move: "push-in" }], ["scroll", 3, { from: "hero", to: "card-2" }]]), { fps });
+  assert.equal(broken.checks.pose, false);
+  assert.equal(broken.pass, false);
+  assert.match(broken.failures.join("\n"), /pose: scroll/);
+});
+
+test("Seam continuity passes at rest and in motion", () => {
+  const rest = seamOf(bookend, { fps });
+  assert.equal(rest.checks.continuity, true);
+  assert.equal(rest.inMotion, false);
+  const wave = (t) => ({ ...still, scroll: 100 + 50 * Math.sin((2 * Math.PI * (t % D)) / D) });
+  const moving = seamCheck(wave, { duration: D, fps });
+  assert.equal(moving.inMotion, true);
+  assert.deepEqual(moving.failures, []);
+});
+
+test("Seam continuity fails on a lurch: at rest into the Seam, moving fast out of it", () => {
+  const lurch = seamOf(sequence([["scroll", 0.25, { from: "hero", to: "card-2" }], ["scroll", 3, { from: "card-2", to: "hero" }]]), { fps });
+  assert.equal(lurch.checks.pose, true);
+  assert.equal(lurch.checks.continuity, false);
+  assert.match(lurch.failures.join("\n"), /continuity: scroll/);
+  const bounce = seamCheck((t) => ({ ...still, scroll: 100 * Math.abs(t - D / 2) }), { duration: D, fps });
+  assert.equal(bounce.checks.continuity, false);
+});
+
+test("Seam duplicate frame fails in motion and passes on a still hold", () => {
+  // A full turn that arrives one frame early, so frame D − Δ repeats frame 0 while moving.
+  const early = seamCheck((t) => ({ ...still, tilt: (360 * Math.min(t, D - dt)) / (D - dt) }), { duration: D, fps });
+  assert.equal(early.checks.pose, true);
+  assert.equal(early.checks.duplicate, false);
+  assert.match(early.failures.join("\n"), /duplicate frame/);
+  // The Bookend rests at both ends: its frame D − Δ repeats frame 0, which can't be seen.
+  sameState(sceneAt(bookend, 7.5 - dt), sceneAt(bookend, 0), "frame D − Δ vs frame 0");
+  assert.equal(seamOf(bookend, { fps }).checks.duplicate, true);
+});
+
+test("Seam angles are compared by shortest difference across the ±180° wrap", () => {
+  const flip = seamCheck((t) => ({ ...still, tilt: t === D ? 180 : -180 }), { duration: D, fps });
+  assert.deepEqual(flip.failures, []);
+  const wrap = (a) => ((((a + 180) % 360) + 360) % 360) - 180;
+  const spin = seamCheck((t) => ({ ...still, tilt: wrap(179 + (360 * t) / D) }), { duration: D, fps });
+  assert.equal(spin.inMotion, true);
+  assert.deepEqual(spin.failures, []);
+  const jump = seamCheck((t) => ({ ...still, tilt: t === D ? 170 : -180 }), { duration: D, fps });
+  assert.equal(jump.checks.pose, false);
+});

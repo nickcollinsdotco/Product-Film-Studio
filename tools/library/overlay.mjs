@@ -16,7 +16,7 @@ const STROKE = 4, FONT = 22; // in 1x px, scaled with the Screen
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 // As library/shot.js names it (plus Windows separators).
-const sidecarOf = (screen) => screen.replace(/\.[^./\\]+$/, "") + ".areas.json";
+export const sidecarOf = (screen) => screen.replace(/\.[^./\\]+$/, "") + ".areas.json";
 
 export async function overlayAreas({ screen, out }) {
   const screenPath = resolve(screen);
