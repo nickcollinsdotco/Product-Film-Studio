@@ -1,5 +1,7 @@
 # Handoff: Loops direction settled (Rounds 7–9); next is the Ultramock control and the look test
 
+> **Superseded** by `2026-10-11-v1-library-handoff.md`.
+
 Date: 2026-10-09. Repo: `C:\Users\nfbco\Documents\GITHUB\Product-Film-Studio`, branch `poc/hyperframes-pipeline`, HEAD `3e443ba` (nothing pushed). Supersedes `.scratch/handoffs/2026-10-08-round-7-handoff.md` wherever they differ; that one is now stale on most decisions.
 
 **Live task list: `.scratch/loops/map.md` and `.scratch/loops/issues/`.** It is the current plan; the Plan and Open sections below are a snapshot of it from 2026-10-09.
