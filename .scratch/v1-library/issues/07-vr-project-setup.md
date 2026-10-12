@@ -4,12 +4,12 @@
 
 **Blocked by:** 01, 02
 
-**Status:** waiting on Nick (Focus area approval, private remote)
+**Status:** done
 
 - [x] `projects/deo-vr` is a HyperFrames project and its own git repository (ADR-0008; the private remote is Nick's to add)
 - [x] The Library is synced into it
 - [x] Project settings filled from the Project sheet
-- [ ] Focus areas for `home-full-1512@3x` (at least `hero` and `rail`) proposed by Claude, shown on the overlay (02) and approved by Nick (proposed and shown; approval pending)
+- [x] Focus areas for `home-full-1512@3x` (at least `hero` and `rail`) proposed by Claude, shown on the overlay (02) and approved by Nick (2026-10-12)
 
 ## Notes (2026-10-12)
 
