@@ -18,3 +18,7 @@
 - **Render time.** Whole export (render + two-pass encode): 24s at 60, 16s at 30. HyperFrames render alone: 19s and 14s. About 1.5×, a few seconds per Loop.
 - **Decision: 60fps stays the default** (ADR-0012). No material downside: render cost is small in absolute terms, quality per bit is equal or better, motion is smoother. `--fps 30` remains for a destination that needs it.
 - Renders: `renders/library/deo-vr/scroll-1600x900-final.mp4` and `…-final-30fps.mp4` (git-ignored, about 8 MB; delete after watching).
+
+## Comments
+
+- 2026-10-12, Nick watched both: 30fps looks horrible; 60 makes a big difference. Default confirmed.
