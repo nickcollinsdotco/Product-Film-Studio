@@ -4,7 +4,7 @@
 
 **Blocked by:** 06
 
-**Status:** done (awaiting Nick's review of the renders)
+**Status:** done
 
 - [x] Phone Device frame drawn from a bezel image over the Screen (Nick approved a simple drawn shape instead, 2026-10-12)
 - [x] Y-tilt limited to about 20°
@@ -20,3 +20,7 @@
 - **Fixture:** `fixtures/hold-loop/screens/fixture-mobile.png` (synthetic, 390 px at 3x, made by `make-screen.mjs`) with Focus areas, and `films/fixture/phone.html`, a Tour: Scroll from the top to `card-2` opening at 20°, then a push in.
 - **Rendered** (Final, 60fps, 4.0 MB each): `renders/library/hold-loop/phone-{1600x900,900x1600}-final.mp4`. Frame 0 tilted and inside the frame at both sizes; bezel clean at full size; type crisp at rest.
 - Library 0.3.0.
+
+## Comments
+
+- 2026-10-12, Nick: "yeah looks good. ship it" (the 16:9 and 9:16 phone renders). Whether a phone Loop may open on its tilt (story 17, a settled frame 0) is still open.
