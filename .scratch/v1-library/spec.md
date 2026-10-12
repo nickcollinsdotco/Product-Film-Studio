@@ -30,7 +30,7 @@ A small Library, built from Quick Loop's working CSS rather than rebuilt, plus t
 14. As Nick, I want a browser Device frame (2D window chrome) and no frame (a rounded card), as Quick Loop draws them today, so that desktop sites look right immediately.
 15. As Nick, I want a phone Device frame drawn from a bezel image and tilted no more than about 20°, so that mobile Screens can be shown like the Steel Hat phone clip without looking like cardboard.
 16. As Nick, I want a bold tilt that eases to upright while the page scrolls, so that I can recreate the Steel Hat phone move.
-17. As Nick, I want every Loop to open on a lit, settled framing, so that frame 0 works as the poster and the first thing seen on every repeat.
+17. As Nick, I want every Loop to open on a lit, settled framing, so that frame 0 works as the poster and the first thing seen on every repeat. (Exception, 2026-10-12, ticket 11: a phone Loop may open on the Steel Hat move's bold tilt.)
 18. As Nick, I want Focus areas proposed by Claude from the Screen and shown to me as one labelled overlay image, so that I approve or correct them in one reply.
 19. As Nick, I want Focus areas stored next to their Screen and shared by every Loop that uses it, so that I approve them once.
 20. As Nick, I want to make a Screen from a live URL with Quick Loop's capture (full page, cookie banners hidden), so that sites I can run don't need manual screenshots.

@@ -23,4 +23,5 @@
 
 ## Comments
 
-- 2026-10-12, Nick: "yeah looks good. ship it" (the 16:9 and 9:16 phone renders). Whether a phone Loop may open on its tilt (story 17, a settled frame 0) is still open.
+- 2026-10-12, Nick: "yeah looks good. ship it" (the 16:9 and 9:16 phone renders).
+- 2026-10-12, Nick: a phone Loop may open on its tilt (the Steel Hat move), an exception to story 17's settled frame 0: "it looks good so why not".
