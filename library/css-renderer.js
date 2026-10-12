@@ -43,18 +43,23 @@
     div(el, `position:absolute;inset:0;background:${css}`);
     const camera = div(el, "position:absolute;left:0;top:0;transform-origin:0 0");
     camera.className = "pfs-camera";
-    const surface = div(camera, "position:absolute;overflow:hidden;background:#fff;transform-origin:50% 50%;backface-visibility:hidden");
+    const surface = div(camera, "position:absolute;overflow:hidden;transform-origin:50% 50%;backface-visibility:hidden");
     surface.className = "pfs-surface";
     // Browser Device frame: 2D window chrome, a bar with three window buttons (Quick Loop's).
-    const bar = div(surface, "position:absolute;left:0;right:0;top:0;display:none;align-items:center;box-sizing:border-box;background:#ececee;border-bottom:1px solid #dcdce0");
+    const bar = div(surface, "position:absolute;left:0;right:0;top:0;display:none;align-items:center;box-sizing:border-box;background:#ececee");
     bar.className = "pfs-bar";
     const buttons = ["#ff5f57", "#febc2e", "#28c840"].map((c) => div(bar, `display:block;border-radius:50%;background:${c}`));
+    // Edges that coincide flicker at sub-pixel zoom: each is anti-aliased on its
+    // own, so a background under the Screen's edge shows as a light sliver. The
+    // Surface has no background; the page white behind a short Screen stops 1px
+    // inside the edges. The Screen shares the Surface's layer (no will-change).
     const viewport = div(surface, "position:absolute;left:0;right:0;bottom:0;overflow:hidden");
+    div(viewport, "position:absolute;inset:0 1px 1px;background:#fff");
     const img = el.ownerDocument.createElement("img");
     img.alt = "";
     img.className = "pfs-screen";
     img.src = screen.url;
-    img.style.cssText = "position:absolute;left:0;top:0;display:block;will-change:transform";
+    img.style.cssText = "position:absolute;left:0;top:0;display:block";
     viewport.appendChild(img);
 
     let laidOut = null;
@@ -65,7 +70,7 @@
         borderRadius: 14 * (b.width / 1400) + "px",
         boxShadow: `0 ${b.width * 0.03}px ${b.width * 0.08}px rgba(0,0,0,${dark ? 0.55 : 0.22}), 0 0 0 1px rgba(${dark ? "255,255,255,0.06" : "0,0,0,0.06"})`,
       });
-      Object.assign(bar.style, { display: bh ? "flex" : "none", height: bh + "px", gap: bh * 0.3 + "px", paddingLeft: bh * 0.55 + "px" });
+      Object.assign(bar.style, { display: bh ? "flex" : "none", height: bh + "px", gap: bh * 0.3 + "px", paddingLeft: bh * 0.55 + "px", borderBottom: `${Math.max(1.5, bh / 20)}px solid #dcdce0` });
       for (const b of buttons) Object.assign(b.style, { width: bh * 0.36 + "px", height: bh * 0.36 + "px" });
       Object.assign(viewport.style, { top: bh + "px", height: c.viewportHeight + "px" });
       Object.assign(img.style, { width: c.width + "px", height: c.imageHeight + "px" });
@@ -74,7 +79,7 @@
 
     return function draw(st) {
       if (laidOut !== st.surface) place(st.surface);
-      img.style.transform = `translate3d(0, ${-st.scroll.toFixed(2)}px, 0)`;
+      img.style.transform = `translateY(${-st.scroll.toFixed(2)}px)`;
       const tilt = st.tilt;
       surface.style.transform = tilt ? `perspective(${W * 1.6}px) rotateX(${tilt * 0.9}deg) rotateY(${-tilt}deg) rotateZ(${tilt * 0.12}deg)` : "none";
       camera.style.transform = st.zoom !== 1 || st.cx !== W / 2 || st.cy !== H / 2
