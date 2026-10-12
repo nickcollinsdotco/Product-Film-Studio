@@ -24,9 +24,11 @@
   // with a 16:10 viewport; a browser frame adds its bar above the viewport. In
   // portrait ratios a browser frame's viewport grows to fill the height (Quick
   // Loop's fill) while the page keeps its desktop width: the Screen is scaled
-  // to the card's width, never reflowed.
+  // to the card's width, never reflowed. A filled Surface is wider (FILLED_WIDTH),
+  // so a desktop page's type isn't tiny in a tall frame (ticket 09).
   // left, top, width and height are the viewport's, where the Screen shows;
   // bounds are the whole Surface's, Device frame (bar) included.
+  const WIDTH = 0.72, FILLED_WIDTH = 0.88; // the Surface's share of the frame's width
   const BAR = { none: () => 0, browser: (w) => Math.round(Math.max(24, w * 0.026)) };
   function layout(frame, screen, deviceFrame = "none") {
     const barH = BAR[deviceFrame];
@@ -35,16 +37,16 @@
     const maxH = H * 0.84, fill = deviceFrame === "browser" && H > W;
     // A filled viewport is never taller than the Screen, so a short Screen leaves no blank page.
     const height = (w) => (fill ? Math.min(maxH - barH(w), screen.h * w / screen.w) : w / (16 / 10));
-    let cw = W * 0.72, vh = height(cw);
+    let cw = W * (fill ? FILLED_WIDTH : WIDTH), vh = height(cw);
     if (vh + barH(cw) > maxH) { // too tall for the frame: shrink width to fit
       const k = maxH / (vh + barH(cw)); cw *= k; vh = height(cw);
     }
     const bar = barH(cw), ch = vh + bar;
     const bounds = { left: (W - cw) / 2, top: (H - ch) / 2, width: cw, height: ch };
-    const scale = cw / screen.w;
+    const imageHeight = screen.h * cw / screen.w; // the same expression as a filled viewport's, so they match exactly
     return {
       width: cw, height: vh, left: bounds.left, top: bounds.top + bar, bounds, bar,
-      viewportHeight: vh, imageHeight: screen.h * scale, maxScroll: Math.max(0, screen.h * scale - vh),
+      viewportHeight: vh, imageHeight, maxScroll: Math.max(0, imageHeight - vh),
     };
   }
 
@@ -86,8 +88,19 @@
     return [[0, open], [1, move.close(open, p)]];
   }
 
+  // The Camera centre on one axis (frame px) that aims at c at zoom Z as far as
+  // the Surface (start, length) allows (ticket 09): a Surface that fits the frame
+  // once zoomed stays inside it, and one that doesn't keeps its edges outside it,
+  // so a wide area near the top of a tall Surface leaves no block of Backdrop above.
+  function cameraOn(c, start, length, size, Z) {
+    const half = size / (2 * Z), a = start + half, b = start + length - half;
+    return clamp(c, Math.min(a, b), Math.max(a, b));
+  }
+
   // Scroll: moves down or up the Screen to land on a Focus area, optionally
   // zooming in on it (Quick Loop's "end" focus move: scroll, then zoom, then settle).
+  // The zoom fits the area within `fill` (0 to 1) of the frame's width and height;
+  // by default the Surface's own width, so an area as wide as the page barely zooms.
   function scroll(params, s, frame, screen, from) {
     if (!params.to) throw new Error("Scroll: no Focus area to land on (`to`)");
     const a = area(params.to, screen, s);
@@ -97,9 +110,13 @@
     if (!zoom || !a) return [[0, open], [0.85, landed], [1, landed]];
     const { width: W, height: H } = frame;
     const fh = Math.min(a.h, s.viewportHeight);
-    const Z = clamp(Math.min((W * 0.72) / a.w, (H * 0.72) / fh), 1, 2.5);
+    const fill = params.fill == null || params.fill === "" ? WIDTH : Number(params.fill);
+    if (!(fill > 0 && fill <= 1)) throw new Error(`Scroll: fill must be above 0 and at most 1, not ${params.fill}`);
+    const Z = clamp(Math.min((W * fill) / a.w, (H * fill) / fh), 1, 2.5);
     const c = centreOf(a, s, landed.scroll);
-    const close = { ...landed, zoom: Z, cx: c.x, cy: c.y, tilt: 0 };
+    const b = s.bounds;
+    const cx = cameraOn(c.x, b.left, b.width, W, Z), cy = cameraOn(c.y, b.top, b.height, H, Z);
+    const close = { ...landed, zoom: Z, cx, cy, tilt: 0 };
     return [[0, open], [0.55, { ...landed, tilt: open.tilt / 2 }], [0.85, close], [1, close]];
   }
   const TEMPLATES = { hold, scroll };

@@ -94,6 +94,47 @@ test("Scroll lands on its Focus area going down, zoomed in on it, and going back
   assert.equal(up.zoom, 1);
 });
 
+test("Scroll's fill sets how much of the frame a wide area fills once zoomed, at any Frame size", () => {
+  const landed = (f, fill) => shotAt({ frame: f, screen: tall, shots: [{ template: "scroll", start: 0, duration: 3, params: { from: "hero", to: "cards", zoom: true, fill } }] }, 0, 3);
+  for (const f of [frame, story]) {
+    const st = landed(f, 0.95), k = st.surface.width / tall.layoutWidth;
+    assert.ok(Math.abs(tall.areas.cards.w * k * st.zoom - 0.95 * f.width) < 1e-6, `${f.width}x${f.height}: cards fill 95% of the width`);
+  }
+  // Without fill, the area fits within 72% of the frame, the card's own width.
+  const st = landed(frame), k = st.surface.width / tall.layoutWidth;
+  assert.ok(Math.abs(tall.areas.cards.w * k * st.zoom - 0.72 * frame.width) < 1e-6);
+});
+
+// Where a zoomed Scroll puts its Surface's edges in the frame, per axis: [low, high, frame size].
+const zoomedEdges = (f, screen, params) => {
+  const st = shotAt({ frame: f, screen, deviceFrame: "browser", shots: [{ template: "scroll", start: 0, duration: 3, params: { zoom: true, ...params } }] }, 0, 3);
+  const b = st.surface.bounds, x = (v) => f.width / 2 + st.zoom * (v - st.cx), y = (v) => f.height / 2 + st.zoom * (v - st.cy);
+  return { st, axes: [[x(b.left), x(b.left + b.width), f.width], [y(b.top), y(b.top + b.height), f.height]] };
+};
+const story = { width: 900, height: 1600 };
+
+test("a zoomed Scroll leaves no lopsided Backdrop: a Surface that fits stays inside the frame, one that doesn't keeps its edges out of it", () => {
+  // A long page with a thin strip near its top, like a rail under a hero.
+  const page = { w: 1440, h: 6000, layoutWidth: 1440, areas: { strip: { x: 40, y: 650, w: 1360, h: 160 } } };
+  for (const [name, f] of [["Landscape", frame], ["Story", story]]) {
+    for (const [lo, hi, size] of zoomedEdges(f, page, { from: "whole", to: "strip", fill: 0.95 }).axes) {
+      if (hi - lo <= size) assert.ok(lo >= -1e-6 && hi <= size + 1e-6, `${name}: edges ${lo}, ${hi} inside 0..${size}`);
+      else assert.ok(lo <= 1e-6 && hi >= size - 1e-6, `${name}: edges ${lo}, ${hi} out of 0..${size}`);
+    }
+  }
+});
+
+test("a mild zoom on an off-centre area still moves the Camera toward it", () => {
+  const { st, axes: [[lo, hi]] } = zoomedEdges(frame, tall, { from: "whole", to: "hero", fill: 0.5 });
+  assert.ok(st.zoom > 1 && hi - lo < frame.width, `zoom ${st.zoom}: the Surface fits`);
+  assert.ok(st.cx < frame.width / 2, `cx ${st.cx}: toward the hero, on the Surface's left`);
+  assert.ok(lo >= -1e-6 && hi <= frame.width + 1e-6, "and the Surface stays in frame");
+});
+
+test("Scroll's fill must be above 0 and at most 1", () => {
+  for (const fill of [0, -0.5, 1.2, "lots"]) assert.throws(() => zoomedEdges(frame, tall, { from: "hero", to: "cards", fill }), /fill must be above 0/);
+});
+
 test("every Shot's motion scales proportionally with its host clip's duration", () => {
   const short = fixture(1), long = fixture(1.7);
   for (const f of [0, 0.05, 0.2, 0.33, 0.5, 0.61, 0.8, 0.9, 1]) {
@@ -209,6 +250,8 @@ test("in portrait ratios a browser frame's viewport grows to fill the height; th
     const browser = layout(f, long, "browser"), plain = layout(f, long, "none");
     assert.ok(Math.abs(browser.bounds.height - 0.84 * f.height) < 1e-9, `${name}: Surface height ${browser.bounds.height}`);
     assert.ok(browser.viewportHeight > 2 * plain.viewportHeight, `${name}: viewport ${browser.viewportHeight} vs ${plain.viewportHeight}`);
+    // A filled card is wider too, so the page's type isn't tiny in a tall frame (ticket 09).
+    assert.ok(Math.abs(browser.width - 0.88 * f.width) < 1e-9, `${name}: Surface width ${browser.width}`);
     // The Screen is scaled, not reflowed: its width is the Surface's, at the Screen's own aspect.
     assert.ok(Math.abs(browser.imageHeight - long.h * browser.width / long.w) < 1e-9);
   }
