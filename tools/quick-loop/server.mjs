@@ -1,13 +1,13 @@
 // Quick Loop: a local page to turn one screenshot (or a captured URL) into a scrolling MP4.
 // Usage: npm run quick   (then open http://localhost:4321)
 import { createServer } from "node:http";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, writeFileSync, copyFileSync, rmSync, readdirSync, utimesSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import puppeteer from "puppeteer-core";
+import { capturePage } from "../library/capture.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "../..");
@@ -24,13 +24,6 @@ const template = () => readFileSync(join(here, "composition.html"), "utf8");
 const jobs = new Map();
 const UPLOAD_DAYS = 7; // uploads unused for this long are deleted when the server starts
 
-// Common cookie banners and consent popups, hidden on every URL capture.
-const HIDE_DEFAULT = [
-  "#onetrust-consent-sdk", "#CybotCookiebotDialog", "#usercentrics-root", "#cookiescript_injected", ".cc-window",
-  "#didomi-host", ".qc-cmp2-container", "#truste-consent-track", ".osano-cm-window", "#hs-eu-cookie-confirmation",
-  "[id*=cookie-banner]", "[class*=cookie-banner]", "[id*=cookie-consent]", "[class*=cookie-consent]",
-  "[aria-label*=cookie i][role=dialog]", "#intercom-container", ".intercom-lightweight-app", "#hubspot-messages-iframe-container",
-];
 // Capture width per Screen viewport: CSS px and device scale.
 const CAPTURE = { "9:19.5": [390, 3], "4:3": [1024, 2] };
 
@@ -83,42 +76,10 @@ async function upload(buf) {
   return { id, url: `/uploads/${id}.jpg`, w: width, h: height };
 }
 
-let browserPath;
+// URL capture: the Library's (cookie banners and listed selectors hidden), sized by Screen viewport.
 async function capture({ url, viewport, hide }) {
-  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-  browserPath ??= spawnSync(process.execPath, [hfBin, "browser", "path"], { encoding: "utf8" }).stdout.trim();
   const [width, scale] = CAPTURE[viewport] || [1440, 2];
-  const browser = await puppeteer.launch({ executablePath: browserPath, headless: true, args: ["--hide-scrollbars"] });
-  try {
-    const page = await browser.newPage();
-    await page.setExtraHTTPHeaders({ "accept-language": "en-GB,en;q=0.9" });
-    await page.setViewport({ width, height: Math.round(width * 0.625), deviceScaleFactor: scale });
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 45000 }).catch((e) => { if (!/timeout/i.test(e.message)) throw e; });
-    const selectors = [...HIDE_DEFAULT, ...String(hide || "").split(",").map((x) => x.trim()).filter(Boolean)];
-    await page.addStyleTag({ content: `${selectors.join(",")} { display: none !important; }
-      html, body { scroll-behavior: auto !important; overflow-anchor: none; }` });
-    // Scroll to the bottom so lazy images and scroll-triggered sections load, then settle at the top.
-    await page.evaluate(async () => {
-      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-      for (let i = 0; i < 60 && window.scrollY + innerHeight < document.documentElement.scrollHeight - 2; i++) {
-        window.scrollBy(0, innerHeight * 0.8); await wait(250);
-      }
-      window.scrollTo(0, 0); await wait(800);
-    });
-    // Custom consent banners: any fixed or sticky box that talks about cookies or consent.
-    await page.evaluate(() => {
-      for (const el of document.querySelectorAll("body *")) {
-        const pos = getComputedStyle(el).position;
-        if ((pos === "fixed" || pos === "sticky") && el.innerText.length < 2000 && /cookie|consent|gdpr|privacy settings/i.test(el.innerText))
-          el.style.setProperty("display", "none", "important");
-      }
-    });
-    await page.evaluate(() => document.fonts.ready);
-    const shot = await page.screenshot({ fullPage: true, type: "png" });
-    return await upload(Buffer.from(shot));
-  } finally {
-    await browser.close();
-  }
+  return upload(await capturePage({ url, width, scale, hide }));
 }
 
 function render(cfg) {

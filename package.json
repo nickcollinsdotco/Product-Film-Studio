@@ -15,6 +15,7 @@
     "library:sync": "node tools/library/sync.mjs",
     "library:export": "node tools/library/export.mjs",
     "library:overlay": "node tools/library/overlay.mjs",
+    "library:capture": "node tools/library/capture.mjs",
     "preview:fixture": "hyperframes preview fixtures/hold-loop"
   },
   "devDependencies": {
