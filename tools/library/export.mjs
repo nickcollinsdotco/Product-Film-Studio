@@ -20,7 +20,7 @@ import { checkSeam } from "./seam.mjs";
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const hfBin = join(repo, "node_modules", "hyperframes", "bin", "hyperframes.mjs");
 const even = (x) => Math.max(2, Math.round(x / 2) * 2);
-const DEFAULT_FPS = 60; // ADR-0012; ticket 08 checks it against 30
+const DEFAULT_FPS = 60; // ADR-0012; kept over 30 on ticket 08's test
 
 export const PRESETS = {
   Landscape: { width: 1600, height: 900 },
