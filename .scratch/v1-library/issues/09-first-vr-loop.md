@@ -4,15 +4,15 @@
 
 **Blocked by:** 03, 04, 05, 06, 07, 08
 
-**Status:** awaiting Nick's review
+**Status:** done
 
 - [x] Loop card written in the VR Project sheet, and the entry file written from it: browser frame, Bookend, Hold on the hero, Scroll to the rail, back
 - [x] Draft renders at 16:9 and 9:16 reviewed for composition and motion
 - [x] Seam check passes; the t = D / t = 0 image and the Loop's join are reviewed by eye, which is the final visual check of the Seam
 - [x] Type sharpness at close zoom checked on paused frames
 - [x] Problems fixed locally (a layout rule, a template parameter) before any architectural change; 9:16 adjusted minimally if it looks poor
-- [ ] Final renders at 16:9 and 9:16 within 6 MB (done: 5.82 and 5.68 MB), compared by hand with the Steel Hat phone clip at the same display height
-- [ ] Approved by Nick
+- [x] Final renders at 16:9 and 9:16 within 6 MB (done: 5.82 and 5.68 MB), compared by hand with the Steel Hat phone clip at the same display height
+- [x] Approved by Nick
 
 ## Notes (2026-10-12)
 
@@ -26,3 +26,7 @@
 - **Type at close zoom** (paused at 6.4s, 1.39×, 16:9 Final): crisp. The 3x Screen shows no cached-bitmap softening (spec risk closed).
 - **Steel Hat comparison:** `renders/library/deo-vr/compare-steel-hat.mp4` (Steel Hat phone | 9:16 | 16:9 at 720 px tall). Steel Hat is a small, boldly tilted device; this Loop is flat and fills more of the frame, and at 16:9 close zoom it is all page, no Backdrop.
 - Renders (git-ignored): `renders/library/deo-vr/home-bookend-{1600x900,900x1600}-final.mp4` and their `-seam.png`.
+
+## Comments
+
+- 2026-10-12, Nick: "good enough, ship it". 9:16 ships as is (no scroll); flat look kept for v1.
