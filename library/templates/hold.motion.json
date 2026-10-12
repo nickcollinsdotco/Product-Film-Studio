@@ -1,0 +1,7 @@
+{
+  "duration": 4,
+  "assertions": [
+    { "kind": "appearsBy", "selector": ".pfs-surface", "bySec": 0.1 },
+    { "kind": "staysInFrame", "selector": ".pfs-surface" }
+  ]
+}

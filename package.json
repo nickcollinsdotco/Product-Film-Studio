@@ -9,9 +9,18 @@
     "doctor": "hyperframes doctor",
     "check:poc": "hyperframes check films/poc",
     "preview:poc": "hyperframes preview films/poc",
-    "render:poc": "hyperframes render films/poc --output renders/poc.mp4"
+    "render:poc": "hyperframes render films/poc --output renders/poc.mp4",
+    "quick": "node tools/quick-loop/server.mjs",
+    "test": "node --test tools/library/test/*.test.mjs",
+    "library:sync": "node tools/library/sync.mjs",
+    "library:export": "node tools/library/export.mjs",
+    "library:overlay": "node tools/library/overlay.mjs",
+    "library:capture": "node tools/library/capture.mjs",
+    "preview:fixture": "hyperframes preview fixtures/hold-loop"
   },
   "devDependencies": {
-    "hyperframes": "0.8.141"
+    "hyperframes": "0.8.141",
+    "sharp": "0.35.5",
+    "puppeteer-core": "25.13.0"
   }
 }

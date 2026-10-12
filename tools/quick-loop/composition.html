@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--
+  Quick Loop composition: one Screen image on a Backdrop, scrolled and
+  optionally zoomed into one focus area. Every frame is a closed-form
+  function of time (hf-seek), so preview and render match.
+  server.mjs bakes size, duration, image and config in for renders;
+  the app page calls window.quick.apply(cfg) / window.quick.seek(t) for preview.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=__W__, height=__H__">
+    <title>Quick Loop</title>
+    <style>
+      html, body { margin: 0; overflow: hidden; background: #000; }
+      #root { position: relative; overflow: hidden; }
+      #backdrop { position: absolute; inset: 0; }
+      #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+      #card {
+        position: absolute; overflow: hidden; background: #fff;
+        transform-origin: 50% 50%; backface-visibility: hidden;
+      }
+      #bar { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; }
+      #bar i { display: block; border-radius: 50%; }
+      #viewport { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; }
+      #shot { position: absolute; left: 0; top: 0; display: block; will-change: transform; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="quick-loop" data-no-timeline="" data-start="0" data-duration="__D__" data-fps="60" data-width="__W__" data-height="__H__">
+      <div id="backdrop"></div>
+      <div id="stage">
+        <div id="card">
+          <div id="bar"><i></i><i></i><i></i></div>
+          <div id="viewport"><img id="shot" src="__SRC__" alt=""></div>
+        </div>
+      </div>
+    </div>
+    <script>/*__CONFIG__*/</script>
+    <script>
+      (() => {
+        const DEFAULTS = {
+          width: 1920, height: 1080, duration: 8,
+          bg: "#0e1116", backdrop: "glow",
+          image: null,            // { url, w, h }
+          screenWidth: 0.72,      // card width as a fraction of frame width
+          viewport: "16:10",      // card aspect: "16:10" | "4:3" | "9:19.5" | "fill"
+          frame: "browser",       // "browser" | "none"
+          radius: 14, shadow: true, tilt: 8,
+          focus: null,            // { x, y, w, h } as fractions of the image
+          focusMove: "end",       // "end" scroll then zoom in | "start" open zoomed, pull out, scroll | "inout" zoom in, out, scroll | "scroll" no zoom
+          scrollLimit: 1,         // where the bottom of the last view stops, as a fraction of the image height
+          loopBack: false,
+        };
+        const $ = (id) => document.getElementById(id);
+        let cfg = { ...DEFAULTS }, geo = null, time = 0;
+
+        const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+        const lerp = (a, b, k) => a + (b - a) * k;
+        const lum = (hex) => {
+          const n = parseInt(hex.replace("#", ""), 16);
+          return (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255;
+        };
+        const shade = (hex, amt) => {
+          const n = parseInt(hex.replace("#", ""), 16);
+          const f = (c) => Math.round(Math.min(255, Math.max(0, c + (amt > 0 ? (255 - c) : c) * amt)));
+          return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`;
+        };
+
+        function layout() {
+          const { width: W, height: H } = cfg;
+          const img = cfg.image || { w: 1440, h: 4000 };
+          const aspect = { "16:10": 16 / 10, "4:3": 4 / 3, "9:19.5": 9 / 19.5 }[cfg.viewport];
+          let cw = W * cfg.screenWidth;
+          const barH = (w) => (cfg.frame === "browser" ? Math.round(Math.max(24, w * 0.026)) : 0);
+          const maxH = H * 0.84;
+          let vh = aspect ? cw / aspect : maxH - barH(cw);
+          if (vh + barH(cw) > maxH) { // too tall for the frame: shrink width to fit
+            const k = maxH / (vh + barH(cw)); cw *= k; vh = aspect ? cw / aspect : maxH - barH(cw);
+          }
+          const bh = barH(cw), ch = vh + bh;
+          const s = cw / img.w, ih = img.h * s;
+          const maxScroll = Math.max(0, ih - vh);
+          const left = (W - cw) / 2, top = (H - ch) / 2;
+
+          const limit = Math.min(maxScroll, Math.max(0, cfg.scrollLimit * ih - vh));
+          let fs = 0, zoomTo = null; // fs: scroll that centres the focus area
+          if (cfg.focus) {
+            const f = cfg.focus;
+            const fy = (f.y + f.h / 2) * ih;
+            fs = Math.min(maxScroll, Math.max(0, fy - vh / 2));
+            if (cfg.focusMove !== "scroll") {
+              const fw = f.w * cw, fh = Math.min(f.h * ih, vh);
+              const Z = Math.min(2.5, Math.max(1, Math.min((W * 0.72) / fw, (H * 0.72) / fh)));
+              const cx = left + (f.x + f.w / 2) * cw;
+              const cy = top + bh + Math.min(vh, Math.max(0, fy - fs));
+              zoomTo = { Z, cx, cy };
+            }
+          }
+
+          // Keyframes: [time fraction, scroll px, zoom 0..1, tilt 0..1]
+          const T = cfg.tilt ? 1 : 0, rest = 0.35 * T;
+          const end = Math.max(fs, limit); // after a focus at the start, keep scrolling down to the limit
+          const move = zoomTo ? cfg.focusMove : "none";
+          let keys = {
+            none: [[0, 0, 0, T], [0.12, 0, 0, T], [0.85, cfg.focus ? fs : limit, 0, rest], [1, cfg.focus ? fs : limit, 0, rest]],
+            end: [[0, 0, 0, T], [0.12, 0, 0, T], [0.55, fs, 0, 0.5 * T], [0.78, fs, 1, 0], [1, fs, 1, 0]],
+            start: [[0, fs, 1, 0], [0.15, fs, 1, 0], [0.38, fs, 0, 0.6 * T], [0.88, end, 0, rest], [1, end, 0, rest]],
+            inout: [[0, fs, 0, T], [0.08, fs, 0, T], [0.28, fs, 1, 0], [0.42, fs, 1, 0], [0.58, fs, 0, 0.6 * T], [0.9, end, 0, rest], [1, end, 0, rest]],
+          }[move];
+          if (cfg.loopBack) { // forward in the first ~55%, hold, return, end on frame 0's state
+            const fwd = keys.map(([t, ...v]) => [t * 0.55, ...v]);
+            const last = fwd[fwd.length - 1], first = fwd[0];
+            keys = [...fwd, [0.68, ...last.slice(1)], [0.94, ...first.slice(1)], [1, ...first.slice(1)]];
+          }
+          geo = { W, H, cw, ch, vh, bh, left, top, ih, zoomTo, keys };
+        }
+
+        function stateAt(t) {
+          const k = Math.min(1, Math.max(0, t / cfg.duration)), keys = geo.keys;
+          let i = 0;
+          while (i < keys.length - 2 && k > keys[i + 1][0]) i++;
+          const a = keys[i], b = keys[i + 1];
+          const u = b[0] > a[0] ? ease(Math.min(1, Math.max(0, (k - a[0]) / (b[0] - a[0])))) : 1;
+          return { scroll: lerp(a[1], b[1], u), zoom: lerp(a[2], b[2], u), tilt: lerp(a[3], b[3], u) };
+        }
+
+        function paint() {
+          const { W, H, cw, ch, vh, bh, left, top, ih, zoomTo } = geo;
+          const root = $("root");
+          Object.assign(root.style, { width: W + "px", height: H + "px" });
+          Object.assign(document.body.style, { width: W + "px", height: H + "px" });
+
+          const dark = lum(cfg.bg) < 0.5;
+          $("backdrop").style.background = cfg.backdrop === "glow"
+            ? `radial-gradient(ellipse 60% 55% at 50% 48%, ${shade(cfg.bg, dark ? 0.16 : 0.35)} 0%, ${cfg.bg} 70%)`
+            : cfg.bg;
+
+          const card = $("card");
+          Object.assign(card.style, {
+            left: left + "px", top: top + "px", width: cw + "px", height: ch + "px",
+            borderRadius: cfg.radius * (cw / 1400) + "px",
+            boxShadow: cfg.shadow
+              ? `0 ${cw * 0.03}px ${cw * 0.08}px rgba(0,0,0,${dark ? 0.55 : 0.22}), 0 0 0 1px rgba(${dark ? "255,255,255,0.06" : "0,0,0,0.06"})`
+              : "none",
+          });
+          const bar = $("bar");
+          bar.style.display = bh ? "flex" : "none";
+          Object.assign(bar.style, { height: bh + "px", gap: bh * 0.3 + "px", paddingLeft: bh * 0.55 + "px", background: "#ececee", borderBottom: "1px solid #dcdce0" });
+          [...bar.children].forEach((d, i) => Object.assign(d.style, { width: bh * 0.36 + "px", height: bh * 0.36 + "px", background: ["#ff5f57", "#febc2e", "#28c840"][i] }));
+          Object.assign($("viewport").style, { top: bh + "px", height: vh + "px" });
+          const shot = $("shot");
+          if (cfg.image && shot.getAttribute("src") !== cfg.image.url) shot.src = cfg.image.url;
+          Object.assign(shot.style, { width: cw + "px", height: ih + "px" });
+          seek(time);
+        }
+
+        function seek(t) {
+          time = t;
+          if (!geo) return;
+          const st = stateAt(t);
+          $("shot").style.transform = `translate3d(0, ${-st.scroll.toFixed(2)}px, 0)`;
+          const tl = cfg.tilt * st.tilt;
+          $("card").style.transform = tl ? `perspective(${geo.W * 1.6}px) rotateX(${tl * 0.9}deg) rotateY(${-tl}deg) rotateZ(${tl * 0.12}deg)` : "none";
+          const z = geo.zoomTo;
+          if (z && st.zoom > 0) {
+            const Z = lerp(1, z.Z, st.zoom), px = lerp(geo.W / 2, z.cx, st.zoom), py = lerp(geo.H / 2, z.cy, st.zoom);
+            $("stage").style.transform = `translate(${geo.W / 2}px, ${geo.H / 2}px) scale(${Z}) translate(${-px}px, ${-py}px)`;
+          } else $("stage").style.transform = "none";
+        }
+
+        function apply(next) { cfg = { ...DEFAULTS, ...cfg, ...next }; layout(); paint(); }
+
+        window.quick = { apply, seek, get duration() { return cfg.duration; } };
+        window.addEventListener("hf-seek", (e) => seek(e.detail.time));
+        apply(window.__quickConfig || {});
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,152 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "console_warning",
+        "severity": "warning",
+        "message": "THREE.WebGLProgram: Program Info Log: (64,12-86): warning X3595: gradient instruction used in a loop with varying iteration; partial derivatives may have undefined value\n\n\n\u0000",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {
+          "data-hf-var-scope": "1",
+          "data-composition-id": "look-v2",
+          "data-no-timeline": "",
+          "data-start": "0",
+          "data-duration": "5",
+          "data-fps": "60",
+          "data-width": "1600",
+          "data-height": "1200",
+          "data-composition-variables": "[\n           {\"id\":\"aperture\",\"type\":\"number\",\"label\":\"DOF aperture\",\"default\":6},\n           {\"id\":\"bloom\",\"type\":\"number\",\"label\":\"Bloom strength\",\"default\":0.12},\n           {\"id\":\"grain\",\"type\":\"number\",\"label\":\"Grain amount (sRGB)\",\"default\":0.03},\n           {\"id\":\"grainSize\",\"type\":\"number\",\"label\":\"Grain size px\",\"default\":1.0},\n           {\"id\":\"dither\",\"type\":\"number\",\"label\":\"Dither LSBs\",\"default\":1},\n           {\"id\":\"backlight\",\"type\":\"number\",\"label\":\"Backlight strength\",\"default\":0.05}\n         ]"
+        },
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1200
+        },
+        "time": 0,
+        "url": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.core.js",
+        "line": 1769
+      }
+    ]
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 5,
+    "samples": [
+      0.278,
+      0.833,
+      1.389,
+      1.944,
+      2.5,
+      3.056,
+      3.611,
+      4.167,
+      4.722
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": false,
+    "errorCount": 1,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "motion_frozen",
+        "severity": "error",
+        "time": 0,
+        "selector": "#root",
+        "message": "nothing moves within #root between 0s and 5s (5s static) — should keep moving",
+        "rect": {
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "width": 0,
+          "height": 0
+        },
+        "fixHint": "Add or extend motion so no shot freezes for this long, or shorten the static hold.",
+        "dataAttributes": {
+          "data-hf-var-scope": "1",
+          "data-composition-id": "look-v2",
+          "data-no-timeline": "",
+          "data-start": "0",
+          "data-duration": "5",
+          "data-fps": "60",
+          "data-width": "1600",
+          "data-height": "1200",
+          "data-composition-variables": "[\n           {\"id\":\"aperture\",\"type\":\"number\",\"label\":\"DOF aperture\",\"default\":6},\n           {\"id\":\"bloom\",\"type\":\"number\",\"label\":\"Bloom strength\",\"default\":0.12},\n           {\"id\":\"grain\",\"type\":\"number\",\"label\":\"Grain amount (sRGB)\",\"default\":0.03},\n           {\"id\":\"grainSize\",\"type\":\"number\",\"label\":\"Grain size px\",\"default\":1.0},\n           {\"id\":\"dither\",\"type\":\"number\",\"label\":\"Dither LSBs\",\"default\":1},\n           {\"id\":\"backlight\",\"type\":\"number\",\"label\":\"Backlight strength\",\"default\":0.05}\n         ]"
+        },
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstSeen": 0,
+        "lastSeen": 0,
+        "occurrences": 1,
+        "heldMs": 0
+      }
+    ],
+    "enabled": true,
+    "specPath": "C:\\Users\\nfbco\\Documents\\GITHUB\\Product-Film-Studio\\.scratch\\look-test\\index.motion.json",
+    "samples": 101
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      0.278,
+      1.389,
+      2.5,
+      3.611,
+      4.722
+    ],
+    "checked": 0,
+    "passed": 0
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  },
+  "_meta": {
+    "version": "0.8.141",
+    "updateAvailable": false
+  }
+}

@@ -8,7 +8,7 @@ id:               # folder slug, e.g. 2026-10-tldr-launch
 
 **How to use.** For a full film: titles, several Surfaces, an ending, music. Brand, look defaults and the asset list come from the Project sheet, so this brief only covers the story. Sections 1 to 4 are required and are enough to write a Shot list. Leave 5 to 7 out unless they say something.
 
-Defaults: 15 to 20s, 4 to 6 Shots, a 16:9 Edit for the portfolio plus 9:16 for X, every Edit works muted. The bar is the Steel Hat laptop Film (`references/own/steel-hat-laptop.mp4`).
+Defaults: 15 to 20s, 4 to 6 Shots, a 16:9 Edit for the portfolio plus 9:16 for X, every Edit works muted. The bar is the Steel Hat laptop Film (`references/own/steel-hat-film.mp4`).
 
 ---
 

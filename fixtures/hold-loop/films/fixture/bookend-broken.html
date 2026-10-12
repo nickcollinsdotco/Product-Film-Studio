@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- Fixture Bookend with a broken Seam: Hold on the hero, Scroll down to a card, and it never comes back, so t = D does not match t = 0. For the export test. Primary Frame size: Landscape. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1600, height=900">
+    <title>Fixture: broken Bookend</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="project-settings.js"></script>
+    <script src="library/project-settings.js"></script>
+    <script src="library/loop-model.js"></script>
+    <script src="library/css-renderer.js"></script>
+    <script src="library/shot.js"></script>
+    <style>
+      html, body { margin: 0; overflow: hidden; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-loop-shape="bookend" data-composition-id="fixture-bookend-broken" data-start="0" data-duration="3" data-width="1600" data-height="900">
+      <div id="shot-1" class="clip" data-composition-id="hold" data-composition-src="library/templates/hold.html" data-start="0" data-duration="1" data-track-index="0" data-width="1600" data-height="900" data-variable-values="{&quot;screen&quot;:&quot;screens/fixture.png&quot;,&quot;screenWidth&quot;:1440,&quot;screenHeight&quot;:2400,&quot;focus&quot;:&quot;hero&quot;,&quot;move&quot;:&quot;push-in&quot;}"></div>
+      <div id="shot-2" class="clip" data-composition-id="scroll" data-composition-src="library/templates/scroll.html" data-start="1" data-duration="2" data-track-index="0" data-width="1600" data-height="900" data-variable-values="{&quot;screen&quot;:&quot;screens/fixture.png&quot;,&quot;screenWidth&quot;:1440,&quot;screenHeight&quot;:2400,&quot;from&quot;:&quot;hero&quot;,&quot;to&quot;:&quot;card-2&quot;}"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["fixture-bookend-broken"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

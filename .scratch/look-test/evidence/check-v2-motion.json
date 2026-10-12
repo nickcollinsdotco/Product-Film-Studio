@@ -1,0 +1,153 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "console_warning",
+        "severity": "warning",
+        "message": "THREE.WebGLProgram: Program Info Log: (64,12-86): warning X3595: gradient instruction used in a loop with varying iteration; partial derivatives may have undefined value\n\n\n\u0000",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {
+          "data-hf-var-scope": "1",
+          "data-composition-id": "look-v2",
+          "data-no-timeline": "",
+          "data-start": "0",
+          "data-duration": "5",
+          "data-fps": "60",
+          "data-width": "1600",
+          "data-height": "1200",
+          "data-composition-variables": "[\n           {\"id\":\"aperture\",\"type\":\"number\",\"label\":\"DOF aperture\",\"default\":6},\n           {\"id\":\"bloom\",\"type\":\"number\",\"label\":\"Bloom strength\",\"default\":0.12},\n           {\"id\":\"grain\",\"type\":\"number\",\"label\":\"Grain amount (sRGB)\",\"default\":0.03},\n           {\"id\":\"grainSize\",\"type\":\"number\",\"label\":\"Grain size px\",\"default\":1.0},\n           {\"id\":\"dither\",\"type\":\"number\",\"label\":\"Dither LSBs\",\"default\":1},\n           {\"id\":\"backlight\",\"type\":\"number\",\"label\":\"Backlight strength\",\"default\":0.05}\n         ]"
+        },
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1200
+        },
+        "time": 0,
+        "url": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.core.js",
+        "line": 1769
+      }
+    ]
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 1,
+    "findings": [
+      {
+        "code": "canvas_content_at_edge",
+        "severity": "info",
+        "time": 4.167,
+        "selector": "#gl",
+        "message": "Canvas content touches the frame edge (right).",
+        "rect": {
+          "left": 0,
+          "top": 0,
+          "right": 1600,
+          "bottom": 1200,
+          "width": 1600,
+          "height": 1200
+        },
+        "containerSelector": "#root",
+        "fixHint": "Keep drawn text inside the visible part of the canvas, or mark intentional full-bleed art with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1600,
+          "bottom": 1200,
+          "width": 1600,
+          "height": 1200
+        },
+        "dataAttributes": {
+          "data-engine": "three.js r181"
+        },
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1200
+        },
+        "firstSeen": 4.167,
+        "lastSeen": 4.167,
+        "occurrences": 1,
+        "heldMs": 0
+      }
+    ],
+    "duration": 5,
+    "samples": [
+      0.278,
+      0.833,
+      1.389,
+      1.944,
+      2.5,
+      3.056,
+      3.611,
+      4.167,
+      4.722
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 1,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "specPath": "C:\\Users\\nfbco\\Documents\\GITHUB\\Product-Film-Studio\\.scratch\\look-test\\index.motion.json",
+    "samples": 101
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      0.278,
+      1.389,
+      2.5,
+      3.611,
+      4.722
+    ],
+    "checked": 0,
+    "passed": 0
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  },
+  "_meta": {
+    "version": "0.8.141",
+    "updateAvailable": false
+  }
+}

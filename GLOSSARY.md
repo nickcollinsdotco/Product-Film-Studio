@@ -40,8 +40,12 @@ The Transition from a Loop's last Shot back to its first: a cut by default, a di
 _Avoid_: loop point, wrap
 
 **Edit**:
-One aspect-ratio version of a Film, such as the 4:3, 16:9 or 9:16 Edit. Each Edit has its own sequence of Shots, Transitions and Landing placements, so Edits of the same Film can differ in pacing, order and which Shots they include.
+One aspect-ratio version of a Film, such as the 16:9 or 9:16 Edit, exported at a Frame size. A Loop's Edits all come from its one source, with its Shot templates laying themselves out for the ratio. A full Film's Edits can each have their own sequence of Shots, Transitions and Landing placements, so they can differ in pacing, order and which Shots they include.
 _Avoid_: cut, format, version, variant
+
+**Frame size**:
+The ratio and pixel dimensions an Edit is exported at: one of the presets Landscape (16:9), Story (9:16), Square (1:1), Portrait (4:5) and Classic (4:3), or custom dimensions. A Loop names one primary Frame size, which it previews at; other Frame sizes are chosen at export.
+_Avoid_: format, resolution, aspect (on its own)
 
 **Shot template**:
 Reusable choreography with a single intent (for example, "push in on a dashboard"), built from Primitives, with opinionated defaults and only a few parameters. It lays itself out for each aspect ratio. Shared templates live in the Library, such as Hold, Reveal, Drift, Scroll and Orbit; one-off templates live in a single Project.
@@ -79,6 +83,10 @@ _Avoid_: preview (that is HyperFrames Studio playback), proxy
 The deliverable render of an Edit at full quality. It refuses substitutions unless the Film's Brief explicitly accepts them.
 _Avoid_: export, master
 
+**Rendition**:
+One encoded file of an Edit for one destination, such as the portfolio Rendition.
+_Avoid_: version, export, master
+
 **Library**:
 The shared collection of Primitives, Renderers and Shot templates that every Project draws from.
 _Avoid_: studio (that is HyperFrames Studio, the preview app), framework, engine
@@ -90,7 +98,7 @@ A named, renderer-independent motion intent that Shot templates are built from, 
 _Avoid_: effect, animation, preset
 
 **Renderer**:
-The thing that turns Primitives into pixels. CSS 3D is the first Renderer; Three.js is planned.
+The thing that turns Primitives into pixels. CSS 3D is the first Renderer and the only one in v1; Three.js comes in a later version.
 _Avoid_: backend, engine
 
 **Camera**:
@@ -134,7 +142,7 @@ _Avoid_: mouse, pointer
 ## Brand
 
 **Default theme**:
-The neutral, restrained look every Film starts from: the Backlight Backdrop and Geist type, so the product's Screens carry the weight. Type colour follows the Backdrop, chosen for contrast. A Product brand re-themes it.
+The restrained look every Film starts from, so the product's Screens carry the weight: a brand-colour Backdrop when the Product brand has a strong colour, otherwise Backlight, and Geist type. Type colour follows the Backdrop, chosen for contrast. A Product brand re-themes it.
 _Avoid_: house style, base style, template
 
 **Product brand**:
