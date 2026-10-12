@@ -30,3 +30,4 @@
 ## Comments
 
 - 2026-10-12, Nick: "good enough, ship it". 9:16 ships as is (no scroll); flat look kept for v1.
+- 2026-10-12, Nick: not good enough to upload; fine as a proof of concept. The motion reads as a double zoom: in and out twice, never settling on anything worth noticing. Cause: the Hold pushes in (1.08×), the Scroll zooms back out to 1× while it moves, zooms in on the rail (1.39×), then the return Scroll zooms out again. The rail isn't a strong subject either. Not uploaded.
