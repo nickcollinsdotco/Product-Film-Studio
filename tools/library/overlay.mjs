@@ -42,13 +42,21 @@ export async function overlayAreas({ screen, out }) {
 
   // Strokes sit inside each box, so its edges land on the box's bounds. The label
   // tab sits above the top-left corner, or just inside it where there's no room above,
-  // and is kept inside the Screen's right edge.
+  // and is kept inside the Screen's right edge. A tab that would cover an earlier
+  // one (areas sharing a corner) moves right past it.
   const sw = STROKE * k, fs = FONT * k, pad = 4 * k, tabH = fs + 2 * pad;
+  const tabs = [];
   const marks = boxes.map((b, i) => {
     const c = COLOURS[i % COLOURS.length];
     const tabW = b.name.length * fs * 0.62 + 2 * pad;
-    const tabY = b.y - tabH >= 0 ? b.y - tabH : b.y;
-    const tabX = Math.max(0, Math.min(b.x, width - tabW));
+    const fits = (x) => Math.max(0, Math.min(x, width - tabW));
+    const overlaps = (t, x, y) => x < t.x + t.w && t.x < x + tabW && y < t.y + tabH && t.y < y + tabH;
+    const covers = (x, y) => tabs.some((t) => overlaps(t, x, y));
+    let tabY = b.y - tabH >= 0 ? b.y - tabH : b.y, tabX = fits(b.x);
+    for (const t of tabs.toSorted((p, q) => p.x - q.x)) if (overlaps(t, tabX, tabY)) tabX = t.x + t.w;
+    // No room to the right: drop a row at a time until the tab is clear.
+    if (tabX + tabW > width) for (tabX = fits(b.x); covers(tabX, tabY); tabY += tabH);
+    tabs.push({ x: tabX, y: tabY, w: tabW });
     return `<rect x="${b.x + sw / 2}" y="${b.y + sw / 2}" width="${Math.max(0, b.w - sw)}" height="${Math.max(0, b.h - sw)}" fill="none" stroke="${c}" stroke-width="${sw}"/>
   <rect x="${tabX}" y="${tabY}" width="${tabW}" height="${tabH}" fill="${c}"/>
   <text x="${tabX + pad}" y="${tabY + pad + fs * 0.8}" font-family="Segoe UI, Arial, sans-serif" font-size="${fs}" font-weight="700" fill="#000">${esc(b.name)}</text>`;

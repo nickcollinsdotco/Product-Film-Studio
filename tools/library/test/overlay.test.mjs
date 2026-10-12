@@ -64,6 +64,42 @@ test("labels each box with its name, in its own colour", async () => {
   }
 });
 
+test("shifts a label tab right when it would cover an earlier one, so areas sharing a corner both stay named", async () => {
+  // At 2x a one-letter tab is about 43 px wide and 60 px tall, above the box.
+  const { dir, screen } = await synthetic({
+    layoutWidth: 200,
+    areas: { a: { x: 20, y: 100, w: 160, h: 50 }, b: { x: 20, y: 100, w: 60, h: 50 } },
+  });
+  try {
+    const out = join(dir, "overlay.png");
+    await overlayAreas({ screen, out });
+    const first = await pixel(out, 42, 144), second = await pixel(out, 86, 144); // tab corners, clear of the text
+    assert.ok(!isGrey(first), "a's tab drawn");
+    assert.ok(!isGrey(second), "b's tab drawn beside it");
+    assert.notDeepEqual(first, second, "the two tabs keep their own colours");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("drops a shifted label tab a row lower when moving it right would run off the Screen", async () => {
+  // At 2x a six-letter tab is about 180 px wide: both tabs are pulled in from the right edge.
+  const { dir, screen } = await synthetic({
+    layoutWidth: 200,
+    areas: { abcdef: { x: 150, y: 100, w: 50, h: 50 }, ghijkl: { x: 150, y: 100, w: 40, h: 40 } },
+  });
+  try {
+    const out = join(dir, "overlay.png");
+    await overlayAreas({ screen, out });
+    const first = await pixel(out, 225, 145), second = await pixel(out, 225, 205); // tab corners, clear of the text
+    assert.ok(!isGrey(first), "the first tab drawn above the box");
+    assert.ok(!isGrey(second), "the second tab drawn a row lower");
+    assert.notDeepEqual(first, second, "the second tab doesn't cover the first");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("leaves `whole` undrawn, since it's built in", async () => {
   const { dir, screen } = await synthetic({
     layoutWidth: 200,

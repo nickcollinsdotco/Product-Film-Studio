@@ -1,5 +1,7 @@
 # Handoff: v1 Loop Library under way; next are tickets 04–06
 
+> Superseded by `2026-10-12-v1-library-07-handoff.md`.
+
 ## Waiting on Nick
 
 Nothing open as of 2026-10-11. These come up later, when the ticket that needs them is reached:
