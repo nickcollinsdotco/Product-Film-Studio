@@ -56,9 +56,10 @@
     const frame = { width: size("data-width"), height: size("data-height") };
     const url = new URL(v.screen, projectRoot).href;
     const screen = { url, w: Number(v.screenWidth), h: Number(v.screenHeight), ...focusAreas(url) };
-    const settings = root.ProjectSettings.resolve();
+    // The Loop's own settings (data-settings on its entry root) override the Project's.
+    const settings = root.ProjectSettings.resolve(JSON.parse(host.parentElement.getAttribute("data-settings") || "{}"));
     const shots = shotsOf(host);
-    const planned = root.LoopModel.plan({ frame, screen, shots });
+    const planned = root.LoopModel.plan({ frame, screen, shots, deviceFrame: settings.deviceFrame });
     const mine = planned.find((p) => p.shot.host === host);
     if (!mine) throw new Error("Shot: its host clip isn't among the Loop's Shot clips");
 

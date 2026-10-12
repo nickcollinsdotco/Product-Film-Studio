@@ -180,3 +180,61 @@ test("Seam angles are compared by shortest difference across the ±180° wrap", 
   const jump = seamCheck((t) => ({ ...still, tilt: t === D ? 170 : -180 }), { duration: D, fps });
   assert.equal(jump.checks.pose, false);
 });
+
+// Layout per Frame size (ticket 06): the card fits the frame with margins at
+// every preset; in portrait ratios a browser frame's viewport fills the height.
+const { PRESETS } = await import("../export.mjs");
+const { layout } = globalThis.LoopModel;
+
+for (const deviceFrame of ["none", "browser"]) {
+  for (const [name, f] of Object.entries(PRESETS)) {
+    test(`${name}, ${deviceFrame} frame: the Surface sits inside the frame with margins`, () => {
+      const s = layout(f, tall, deviceFrame), c = s.bounds;
+      for (const m of [c.left, c.top, f.width - c.left - c.width, f.height - c.top - c.height])
+        assert.ok(m >= 0.05 * Math.min(f.width, f.height), `${name}: margin ${m}`);
+      // The viewport (where the Screen shows) is the Surface below its browser bar.
+      assert.equal(s.left, c.left);
+      assert.equal(s.width, c.width);
+      assert.equal(s.top, c.top + s.bar);
+      assert.equal(s.top + s.viewportHeight, c.top + c.height);
+      assert.equal(s.bar > 0, deviceFrame === "browser");
+    });
+  }
+}
+
+test("in portrait ratios a browser frame's viewport grows to fill the height; the page keeps its desktop width", () => {
+  const long = { w: 1440, h: 6000 }; // a long page, taller than any filled viewport
+  for (const name of ["Story", "Portrait"]) {
+    const f = PRESETS[name];
+    const browser = layout(f, long, "browser"), plain = layout(f, long, "none");
+    assert.ok(Math.abs(browser.bounds.height - 0.84 * f.height) < 1e-9, `${name}: Surface height ${browser.bounds.height}`);
+    assert.ok(browser.viewportHeight > 2 * plain.viewportHeight, `${name}: viewport ${browser.viewportHeight} vs ${plain.viewportHeight}`);
+    // The Screen is scaled, not reflowed: its width is the Surface's, at the Screen's own aspect.
+    assert.ok(Math.abs(browser.imageHeight - long.h * browser.width / long.w) < 1e-9);
+  }
+  for (const name of ["Landscape", "Square", "Classic"]) {
+    const s = layout(PRESETS[name], tall, "browser");
+    assert.ok(Math.abs(s.width / s.viewportHeight - 16 / 10) < 1e-9, `${name} keeps a 16:10 viewport`);
+  }
+});
+
+test("a filled viewport stops at the Screen's height, so a short Screen leaves no blank page", () => {
+  const short = { w: 1440, h: 1800 }, s = layout(PRESETS.Story, short, "browser");
+  assert.ok(Math.abs(s.viewportHeight - s.imageHeight) < 1e-9);
+  assert.equal(s.maxScroll, 0);
+  assert.ok(s.bounds.height < 0.84 * PRESETS.Story.height);
+});
+
+test("an unknown Device frame is rejected", () => {
+  assert.throws(() => layout(frame, tall, "laptop"), /Device frame "laptop"/);
+});
+
+test("in a browser frame a Scroll still lands its Focus area in the viewport", () => {
+  for (const name of ["Landscape", "Story"]) {
+    const f = PRESETS[name];
+    const loop = { frame: f, screen: tall, deviceFrame: "browser", shots: [{ template: "scroll", start: 0, duration: 3, params: { from: "hero", to: "card-2" } }] };
+    const st = sceneAt(loop, 3), a = tall.areas["card-2"], k = st.surface.width / tall.layoutWidth;
+    const y = st.surface.top + (a.y + a.h / 2) * k - st.scroll;
+    assert.ok(y > st.surface.top && y < st.surface.top + st.surface.viewportHeight, `${name}: ${y}`);
+  }
+});

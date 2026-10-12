@@ -3,9 +3,9 @@
 // (imported for its side effect, read from globalThis.LoopModel).
 // Layout, easing and focus moves are lifted from Quick Loop (tools/quick-loop/composition.html).
 //
-// A Loop is { frame, screen, shots }. screen is { w, h } in image px, plus
-// optional Focus areas from its sidecar: { layoutWidth, areas: { name: {x,y,w,h} } }
-// in 1x px at layoutWidth. A Shot is { template, start, duration, params, cut }.
+// A Loop is { frame, screen, shots, deviceFrame } (deviceFrame is "none" unless
+// given). screen is { w, h } in image px, plus optional Focus areas from its
+// sidecar: { layoutWidth, areas: { name: {x,y,w,h} } } in 1x px at layoutWidth. A Shot is { template, start, duration, params, cut }.
 // State is { scroll, zoom, cx, cy, tilt, surface }: the Camera puts frame point
 // (cx, cy) at the frame's centre, scaled by zoom.
 (function (root) {
@@ -19,15 +19,31 @@
   const PUSH = 1.08; // zoom factor of a Hold's push in or pull out
   const SIDEWAYS = 0.05; // two areas closer than this share of the viewport's height in scroll are side by side
 
-  // Surface geometry for a Frame size and Screen (Quick Loop's card layout, no Device frame).
-  function layout(frame, screen) {
+  // Surface geometry for a Frame size, Screen and Device frame (Quick Loop's card
+  // layout). The card is 72% of the frame's width and at most 84% of its height,
+  // with a 16:10 viewport; a browser frame adds its bar above the viewport. In
+  // portrait ratios a browser frame's viewport grows to fill the height (Quick
+  // Loop's fill) while the page keeps its desktop width: the Screen is scaled
+  // to the card's width, never reflowed.
+  // left, top, width and height are the viewport's, where the Screen shows;
+  // bounds are the whole Surface's, Device frame (bar) included.
+  const BAR = { none: () => 0, browser: (w) => Math.round(Math.max(24, w * 0.026)) };
+  function layout(frame, screen, deviceFrame = "none") {
+    const barH = BAR[deviceFrame];
+    if (!barH) throw new Error(`Device frame "${deviceFrame}" isn't supported`);
     const { width: W, height: H } = frame;
-    const aspect = 16 / 10, maxH = H * 0.84;
-    let cw = W * 0.72, vh = cw / aspect;
-    if (vh > maxH) { cw *= maxH / vh; vh = maxH; }
+    const maxH = H * 0.84, fill = deviceFrame === "browser" && H > W;
+    // A filled viewport is never taller than the Screen, so a short Screen leaves no blank page.
+    const height = (w) => (fill ? Math.min(maxH - barH(w), screen.h * w / screen.w) : w / (16 / 10));
+    let cw = W * 0.72, vh = height(cw);
+    if (vh + barH(cw) > maxH) { // too tall for the frame: shrink width to fit
+      const k = maxH / (vh + barH(cw)); cw *= k; vh = height(cw);
+    }
+    const bar = barH(cw), ch = vh + bar;
+    const bounds = { left: (W - cw) / 2, top: (H - ch) / 2, width: cw, height: ch };
     const scale = cw / screen.w;
     return {
-      width: cw, height: vh, left: (W - cw) / 2, top: (H - vh) / 2,
+      width: cw, height: vh, left: bounds.left, top: bounds.top + bar, bounds, bar,
       viewportHeight: vh, imageHeight: screen.h * scale, maxScroll: Math.max(0, screen.h * scale - vh),
     };
   }
@@ -92,7 +108,7 @@
   // the previous Shot's closing state unless it has `cut`. A closing state doesn't
   // depend on duration, so this chain doesn't either.
   function plan(loop) {
-    const s = layout(loop.frame, loop.screen);
+    const s = layout(loop.frame, loop.screen, loop.deviceFrame);
     const shots = [...loop.shots].sort((a, b) => a.start - b.start);
     let prev = null;
     return shots.map((shot) => {
@@ -130,8 +146,8 @@
   // next. A lone area is a Hold; each move along the Screen to another area is a
   // Scroll. A move between areas that needs no scrolling (side by side) is
   // rejected: v1 has no sideways move.
-  function inferShots(path, frame, screen) {
-    const s = layout(frame, screen);
+  function inferShots(path, frame, screen, deviceFrame) {
+    const s = layout(frame, screen, deviceFrame);
     const shots = [];
     path.split("/").forEach((segment, i) => {
       const names = segment.split(/→|->/).map((n) => n.trim());
