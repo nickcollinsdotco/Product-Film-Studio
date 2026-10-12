@@ -13,9 +13,11 @@
 
 ## Notes (2026-10-12)
 
-- Set up by hand (no `hyperframes init`), as `fixtures/hold-loop/`: `hyperframes.json`, `meta.json`, a placeholder `index.html`, `films/`, and a `.gitignore` for renders and caches. `hyperframes check` passes. Its own repo on `main`, first commit `79f7e9e`, no remote.
+- Set up by hand (no `hyperframes init`), as `fixtures/hold-loop/`: `hyperframes.json`, `meta.json`, a placeholder `index.html`, and `films/`. `hyperframes check` passes. Its first repo was replaced the same day: see the last note.
 - **No Project sheet existed.** Claude wrote `project.md` from `docs/brief-template/project.md` using the Screens: brand pink `#f86195`, sampled from the Step inside button; browser frame; primary Frame size Landscape. Backdrop brand colour (flat pink), which is also the default for a strong colour like this pink; set explicitly.
-- **Screens stay in `assets/_source/`**, Nick's existing folder, so Loop variables use `assets/_source/home-full-1512@3x.png` and the sidecar sits beside it. All ten Screens are committed (about 113 MB of history). The largest, `home-full`, is 48 MB: under GitHub's 100 MB limit but over its 50 MB warning.
+- **Screens stay in `assets/_source/`**, Nick's existing folder, so Loop variables use `assets/_source/home-full-1512@3x.png` and the sidecar sits beside it.
 - **Focus areas proposed** (1x px at layout width 1512): `hero` (player and title column), `player`, `hero-title`, `rail` (the thumbnail strip under the hero), `find-next`, `look-closer`, `creators`. `rail` is very wide and thin (about 8:1), so a close zoom on it in 9:16 can't show all of it; ticket 09's concern.
 - The overlay drew the `hero` and `player` labels on top of each other (same corner). `overlay.mjs` now moves a label right past any earlier label it would cover, or a row lower where there is no room to the right.
 - Overlay for approval: `renders/overlays/home-full-1512@3x.areas.jpg` (git-ignored).
+- **Repo setup changed (Nick, 2026-10-12; ADR-0008 note):** all of Nick's Projects share one private repo at `projects/`, `nickcollinsdotco/studio-projects`, text only. Screens and media are git-ignored and kept on the machine under Nick's own backup. A fresh clone needs the Screens copied in before it can render.
+- Nick confirmed the Project sheet as written (2026-10-12).

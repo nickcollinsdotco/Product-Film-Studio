@@ -2,8 +2,6 @@
 
 ## Waiting on Nick
 
-- v1-library 07 (open since 2026-10-11): add the private remote for `projects/deo-vr`.
-- v1-library 07 (open since 2026-10-12): confirm the Project sheet Claude wrote, `projects/deo-vr/project.md` (pink `#f86195`, brand-colour Backdrop, browser frame).
 - v1-library 09: sign off the first VR Loop (later).
 - v1-library 11 (deferred): phone bezel image, or approve a simple drawn one.
 
