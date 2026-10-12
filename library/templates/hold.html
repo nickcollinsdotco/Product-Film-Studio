@@ -2,7 +2,8 @@
 <!--
   Hold Shot template: stays on one Focus area with one slow move.
   Variables: screen (path), screenWidth, screenHeight (px), focus (a Focus area
-  name, default "whole"), move ("push-in" | "pull-out" | "tilt-settle").
+  name, default "whole"), move ("push-in" | "pull-out" | "tilt-settle"), tilt
+  (degrees a tilt settle opens on, 8 by default, at most 20 either way).
   The Loop entry loads gsap, the Project settings and the Library before this runs.
 -->
 <html lang="en" data-composition-variables='[
@@ -10,7 +11,8 @@
   {"id":"screenWidth","type":"number","label":"Screen width","default":1440},
   {"id":"screenHeight","type":"number","label":"Screen height","default":900},
   {"id":"focus","type":"string","label":"Focus area","default":"whole"},
-  {"id":"move","type":"string","label":"Move","default":"push-in"}
+  {"id":"move","type":"string","label":"Move","default":"push-in"},
+  {"id":"tilt","type":"number","label":"Tilt settle from (degrees)","default":8}
 ]'>
   <head>
     <meta charset="UTF-8">

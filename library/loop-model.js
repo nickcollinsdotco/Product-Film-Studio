@@ -16,6 +16,7 @@
   const KEYS = ["scroll", "zoom", "cx", "cy", "tilt"];
 
   const TILT = 8; // degrees at full tilt, as Quick Loop
+  const MAX_TILT = 20; // beyond this a flat Surface reads as cardboard (ticket 11)
   const PUSH = 1.08; // zoom factor of a Hold's push in or pull out
   const SIDEWAYS = 0.05; // two areas closer than this share of the viewport's height in scroll are side by side
 
@@ -26,26 +27,45 @@
   // Loop's fill) while the page keeps its desktop width: the Screen is scaled
   // to the card's width, never reflowed. A filled Surface is wider (FILLED_WIDTH),
   // so a desktop page's type isn't tiny in a tall frame (ticket 09).
+  // A phone frame (ticket 11) is a body round a 9:19.5 viewport, inset by its
+  // bezel on every side, 76% of the frame's height unless 72% of the width is
+  // narrower: shorter than a card, so a pushed-in phone keeps a margin. A tilted
+  // phone also turns in the frame (`turn` degrees per degree of tilt, drawn by
+  // the CSS Renderer), so it is sized to fit the frame turned at full tilt.
   // left, top, width and height are the viewport's, where the Screen shows;
-  // bounds are the whole Surface's, Device frame (bar) included.
+  // bounds are the whole Surface's, Device frame (bar or bezel) included.
   const WIDTH = 0.72, FILLED_WIDTH = 0.88; // the Surface's share of the frame's width
-  const BAR = { none: () => 0, browser: (w) => Math.round(Math.max(24, w * 0.026)) };
+  const BAR = { none: () => 0, browser: (w) => Math.round(Math.max(24, w * 0.026)), phone: () => 0 };
+  const PHONE = 19.5 / 9; // the phone's viewport aspect (h / w)
+  const BEZEL = 22 / 710; // the bezel, as a share of the viewport's width (Nick's drawn shape)
+  const PHONE_HEIGHT = 0.76; // the phone's largest share of the frame's height
+  const PHONE_TURN = 1.4; // in-plane degrees per degree of tilt
+  const PHONE_TURNED = 0.88; // share of the frame a phone turned at full tilt may fill // the phone's viewport aspect (h / w), and its bezel as a share of the viewport's width (Nick's drawn shape)
   function layout(frame, screen, deviceFrame = "none") {
     const barH = BAR[deviceFrame];
     if (!barH) throw new Error(`Device frame "${deviceFrame}" isn't supported`);
     const { width: W, height: H } = frame;
-    const maxH = H * 0.84, fill = deviceFrame === "browser" && H > W;
-    // A filled viewport is never taller than the Screen, so a short Screen leaves no blank page.
-    const height = (w) => (fill ? Math.min(maxH - barH(w), screen.h * w / screen.w) : w / (16 / 10));
-    let cw = W * (fill ? FILLED_WIDTH : WIDTH), vh = height(cw);
-    if (vh + barH(cw) > maxH) { // too tall for the frame: shrink width to fit
-      const k = maxH / (vh + barH(cw)); cw *= k; vh = height(cw);
+    const maxH = H * 0.84;
+    let cw, vh, bezel = 0, turn = 0;
+    if (deviceFrame === "phone") {
+      const aspect = (PHONE + 2 * BEZEL) / (1 + 2 * BEZEL), turned = (MAX_TILT * PHONE_TURN * Math.PI) / 180; // the body's h / w; its largest turn in radians
+      const [cos, sin] = [Math.cos(turned), Math.sin(turned)];
+      const bw = Math.min(W * WIDTH, (H * PHONE_HEIGHT) / aspect, (PHONE_TURNED * W) / (cos + aspect * sin), (PHONE_TURNED * H) / (aspect * cos + sin));
+      cw = bw / (1 + 2 * BEZEL); vh = cw * PHONE; bezel = cw * BEZEL; turn = PHONE_TURN;
+    } else {
+      const fill = deviceFrame === "browser" && H > W;
+      // A filled viewport is never taller than the Screen, so a short Screen leaves no blank page.
+      const height = (w) => (fill ? Math.min(maxH - barH(w), screen.h * w / screen.w) : w / (16 / 10));
+      cw = W * (fill ? FILLED_WIDTH : WIDTH); vh = height(cw);
+      if (vh + barH(cw) > maxH) { // too tall for the frame: shrink width to fit
+        const k = maxH / (vh + barH(cw)); cw *= k; vh = height(cw);
+      }
     }
-    const bar = barH(cw), ch = vh + bar;
-    const bounds = { left: (W - cw) / 2, top: (H - ch) / 2, width: cw, height: ch };
+    const bar = barH(cw), bw = cw + 2 * bezel, bh = vh + bar + 2 * bezel;
+    const bounds = { left: (W - bw) / 2, top: (H - bh) / 2, width: bw, height: bh };
     const imageHeight = screen.h * cw / screen.w; // the same expression as a filled viewport's, so they match exactly
     return {
-      width: cw, height: vh, left: bounds.left, top: bounds.top + bar, bounds, bar,
+      width: cw, height: vh, left: bounds.left + bezel, top: bounds.top + bar + bezel, bounds, bar, bezel, turn,
       viewportHeight: vh, imageHeight, maxScroll: Math.max(0, imageHeight - vh),
     };
   }
@@ -71,12 +91,20 @@
   // Scales the Camera by f about frame point p, keeping p where it is on screen.
   const scaleAbout = (st, p, f) => ({ ...st, zoom: st.zoom * f, cx: p.x - (p.x - st.cx) / f, cy: p.y - (p.y - st.cy) / f });
 
+  // A Shot's `tilt` parameter in degrees, within ±MAX_TILT; `fallback` when not given.
+  function tiltOf(params, fallback) {
+    if (params.tilt == null || params.tilt === "") return fallback;
+    const t = Number(params.tilt);
+    if (!(Math.abs(t) <= MAX_TILT)) throw new Error(`tilt must be between -${MAX_TILT} and ${MAX_TILT} degrees, not ${params.tilt}`);
+    return t;
+  }
+
   // Hold: stays on one Focus area with one slow move. Opens on `from` (the previous
   // Shot's closing state) or, after a cut, on its own opening for the move.
   const MOVES = {
     "push-in": { open: (st) => st, close: (st, p) => scaleAbout(st, p, PUSH) },
     "pull-out": { open: (st, p) => scaleAbout(st, p, PUSH), close: (st, p) => scaleAbout(st, p, 1 / PUSH) },
-    "tilt-settle": { open: (st) => ({ ...st, tilt: TILT }), close: (st) => ({ ...st, tilt: 0 }) },
+    "tilt-settle": { open: (st, p, tilt) => ({ ...st, tilt }), close: (st) => ({ ...st, tilt: 0 }) },
   };
   function hold(params, s, frame, screen, from) {
     const a = area(params.focus || "whole", screen, s);
@@ -84,7 +112,7 @@
     if (!move) throw new Error(`Hold: unknown move "${params.move}"`);
     const base = framing(a, s, frame);
     const p = centreOf(a, s, from ? from.scroll : base.scroll);
-    const open = from || move.open(base, p);
+    const open = from || move.open(base, p, tiltOf(params, TILT));
     return [[0, open], [1, move.close(open, p)]];
   }
 
@@ -99,13 +127,16 @@
 
   // Scroll: moves down or up the Screen to land on a Focus area, optionally
   // zooming in on it (Quick Loop's "end" focus move: scroll, then zoom, then settle).
+  // It lands upright: opening on a `tilt` (when it opens on its own, as `from`
+  // does), the tilt eases out while the page scrolls (the Steel Hat phone move).
   // The zoom fits the area within `fill` (0 to 1) of the frame's width and height;
   // by default the Surface's own width, so an area as wide as the page barely zooms.
   function scroll(params, s, frame, screen, from) {
     if (!params.to) throw new Error("Scroll: no Focus area to land on (`to`)");
     const a = area(params.to, screen, s);
-    const open = from || framing(area(params.from || "whole", screen, s), s, frame);
-    const landed = { ...framing(a, s, frame), tilt: open.tilt };
+    const tilt = tiltOf(params, 0);
+    const open = from || { ...framing(area(params.from || "whole", screen, s), s, frame), tilt };
+    const landed = framing(a, s, frame);
     const zoom = params.zoom === true || params.zoom === "true";
     if (!zoom || !a) return [[0, open], [0.85, landed], [1, landed]];
     const { width: W, height: H } = frame;

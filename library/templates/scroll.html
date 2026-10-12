@@ -6,7 +6,9 @@
   Variables: screen (path), screenWidth, screenHeight (px), from, to (Focus area
   names from the Screen's .areas.json sidecar; `whole` is the top), zoom, fill
   (how much of the frame's width and height the zoomed area may fill, 0.72 by
-  default; raise it, e.g. 0.95, for an area as wide as the page).
+  default; raise it, e.g. 0.95, for an area as wide as the page), tilt (degrees
+  the Shot opens on when it opens on its own, at most 20 either way; it eases
+  upright while the page scrolls: the Steel Hat phone move).
   The Loop entry loads gsap, the Project settings and the Library before this runs.
 -->
 <html lang="en" data-composition-variables='[
@@ -16,7 +18,8 @@
   {"id":"from","type":"string","label":"From Focus area","default":"whole"},
   {"id":"to","type":"string","label":"To Focus area","default":"whole"},
   {"id":"zoom","type":"boolean","label":"Zoom in","default":false},
-  {"id":"fill","type":"number","label":"Zoomed area fills","default":0.72}
+  {"id":"fill","type":"number","label":"Zoomed area fills","default":0.72},
+  {"id":"tilt","type":"number","label":"Opening tilt (degrees)","default":0}
 ]'>
   <head>
     <meta charset="UTF-8">

@@ -75,7 +75,7 @@ A small Library, built from Quick Loop's working CSS rather than rebuilt, plus t
   - Duplicate frame: fails only if `state(D − Δ) == state(0)` while the Seam is in motion (`state(Δ) ≠ state(0)`). A still hold across the Seam passes. This refines ADR-0011's unconditional rule, which would fail every Bookend that rests at both ends; ADR-0011 is amended to match.
   - A failed check blocks a Final render; a Draft render warns and continues.
   - The side-by-side image of t = D and t = 0 is always written for a Bookend, and the Seam is also reviewed by eye.
-- **CSS Renderer.** Draws scene state into the DOM: Backdrop, card, Device frame, Screen image, scroll, tilt and zoom. Lifted from Quick Loop's paint and seek. Device frames: none, browser (2D chrome, as Quick Loop), phone (a bezel image over the Screen, Y-tilt limited to about 20°).
+- **CSS Renderer.** Draws scene state into the DOM: Backdrop, card, Device frame, Screen image, scroll, tilt and zoom. Lifted from Quick Loop's paint and seek. Device frames: none, browser (2D chrome, as Quick Loop), phone (a bezel image over the Screen, Y-tilt limited to about 20°; for now a simple drawn shape Nick approved, ticket 11).
 - **Shot templates (Scroll, Hold).** HyperFrames sub-compositions that receive their parameters as variables (ADR-0003). Each registers a paused timeline sized from its host clip's duration (loops ticket 05's host-clip lookup), whose update asks the Loop model for state and has the Renderer draw it. This replaces Quick Loop's root-level seek listener, which isn't proven inside a mounted Shot. Rules from ADR-0007 apply: no clip timing on inner elements, ids prefixed per template, a motion sidecar per template.
 - **Project settings.** One per Project, loaded synchronously by every Loop entry: brand colour, Backdrop, default Device frame, default primary Frame size. Loop cards override per Loop. The human source is the Project sheet; Claude transcribes it.
 - **Loop entry file.** One per Loop in its Film folder (ADR-0009 as amended). Its root size is the Loop's primary Frame size; it places Shot host clips with timing and parameters; Transitions are Edit-owned (a cut by default). Written by Claude from the Loop card; never generated over (ADR-0003).
@@ -120,7 +120,7 @@ A small Library, built from Quick Loop's working CSS rather than rebuilt, plus t
 ## Further Notes
 
 - **ADR-0011 amended** (2026-10-11): the duplicate-frame rule as refined above, angles modulo 360°, state-based approximation. Tickets: [`issues/`](issues/), 01 first; 11 (phone frame) deferred.
-- **Phone bezel image:** the phone frame needs a bezel image Nick supplies (or approves). Not needed for the first production Loop, which uses the browser frame.
+- **Phone bezel image:** the phone frame needs a bezel image Nick supplies (or approves). Not needed for the first production Loop, which uses the browser frame. Nick approved a simple drawn shape until real devices exist (2026-10-12, ticket 11).
 - **Risks to check on the first renders:** Quick Loop's zoom scales an image layer marked for transform, which may keep a cached bitmap and soften type at close zoom; the phone bezel at 20° of tilt; the VR website in 9:16 with the fill rule (provisional; fix with the smallest local change).
 - Square at 1600×1600 and 60fps needs H.264 level 5.1 (the other presets fit 4.2); some older phones can't decode it in hardware. Kept as decided.
 - Studio preview needs a reload to show a stretched Shot; render is always right (loops ticket 05).

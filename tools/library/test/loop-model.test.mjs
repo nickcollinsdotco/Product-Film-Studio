@@ -281,3 +281,59 @@ test("in a browser frame a Scroll still lands its Focus area in the viewport", (
     assert.ok(y > st.surface.top && y < st.surface.top + st.surface.viewportHeight, `${name}: ${y}`);
   }
 });
+
+// Phone Device frame (ticket 11): Nick's simple drawn bezel round a 9:19.5 viewport.
+const mobile = { w: 1170, h: 5400, layoutWidth: 390, areas: { hero: { x: 20, y: 120, w: 350, h: 400 }, gallery: { x: 0, y: 1200, w: 390, h: 500 } } };
+
+for (const [name, f] of Object.entries(PRESETS)) {
+  test(`${name}, phone frame: the phone sits inside the frame with margins, its Screen inset by the bezel`, () => {
+    const s = layout(f, mobile, "phone"), c = s.bounds;
+    for (const m of [c.left, c.top, f.width - c.left - c.width, f.height - c.top - c.height])
+      assert.ok(m >= 0.05 * Math.min(f.width, f.height), `${name}: margin ${m}`);
+    assert.ok(s.bezel > 0 && s.bar === 0);
+    for (const [inner, outer] of [[s.left, c.left], [s.top, c.top]]) assert.ok(Math.abs(inner - outer - s.bezel) < 1e-9);
+    assert.ok(Math.abs(c.width - s.width - 2 * s.bezel) < 1e-9 && Math.abs(c.height - s.viewportHeight - 2 * s.bezel) < 1e-9);
+    assert.ok(Math.abs(s.viewportHeight / s.width - 19.5 / 9) < 1e-9, "a 9:19.5 Screen");
+    assert.ok(Math.abs(s.imageHeight - mobile.h * s.width / mobile.w) < 1e-9, "the Screen is scaled to the phone's width");
+  });
+}
+
+const phoneLoop = (shots, f = frame) => ({ frame: f, screen: mobile, deviceFrame: "phone", shots });
+
+test("the Steel Hat phone move: a Scroll opens on a bold tilt that eases upright while the page scrolls", () => {
+  const loop = phoneLoop([{ template: "scroll", start: 0, duration: 4, params: { from: "whole", to: "gallery", tilt: 20 } }]);
+  const at = (t) => sceneAt(loop, t);
+  assert.equal(at(0).tilt, 20);
+  assert.equal(at(0).scroll, 0);
+  assert.equal(at(4).tilt, 0);
+  assert.ok(at(4).scroll > 0);
+  for (let t = 0.25; t <= 4; t += 0.25) {
+    const a = at(t - 0.25), b = at(t);
+    assert.ok(b.tilt <= a.tilt && b.scroll >= a.scroll, `t ${t}: tilt ${a.tilt} → ${b.tilt}, scroll ${a.scroll} → ${b.scroll}`);
+  }
+  // Mid-Shot both are on the way: the tilt eases over the scroll, not before or after it.
+  assert.ok(at(2).tilt > 0 && at(2).tilt < 20 && at(2).scroll > 0 && at(2).scroll < at(4).scroll);
+});
+
+test("a Hold's tilt settle takes its tilt from the Shot", () => {
+  const loop = phoneLoop([{ template: "hold", start: 0, duration: 3, params: { focus: "hero", move: "tilt-settle", tilt: 15 } }]);
+  assert.equal(sceneAt(loop, 0).tilt, 15);
+  assert.equal(sceneAt(loop, 3).tilt, 0);
+});
+
+test("a tilt beyond 20° either way is rejected, so a flat Surface never looks like cardboard", () => {
+  for (const tilt of [21, -25, "lots"]) {
+    assert.throws(() => sceneAt(phoneLoop([{ template: "scroll", start: 0, duration: 3, params: { to: "gallery", tilt } }]), 0), /tilt/);
+    assert.throws(() => sceneAt(phoneLoop([{ template: "hold", start: 0, duration: 3, params: { move: "tilt-settle", tilt } }]), 0), /tilt/);
+  }
+  assert.equal(sceneAt(phoneLoop([{ template: "scroll", start: 0, duration: 3, params: { to: "gallery", tilt: -20 } }]), 0).tilt, -20);
+});
+
+test("at full tilt, a phone turned in the frame still fits it with margins, at every preset", () => {
+  for (const [name, f] of Object.entries(PRESETS)) {
+    const { bounds: b, turn } = layout(f, mobile, "phone");
+    const r = (20 * turn * Math.PI) / 180, w = b.width * Math.cos(r) + b.height * Math.sin(r), h = b.height * Math.cos(r) + b.width * Math.sin(r);
+    assert.ok(turn > 1, `${name}: the phone turns more than it tilts`);
+    assert.ok(w <= 0.9 * f.width && h <= 0.9 * f.height, `${name}: turned phone ${w} × ${h}`);
+  }
+});

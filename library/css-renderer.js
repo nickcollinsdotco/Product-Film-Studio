@@ -30,14 +30,25 @@
     }),
   };
 
+  // Tilt: one angle in the scene state, drawn per Device frame. A card or browser
+  // tips back with a slight turn (Quick Loop's); a phone mostly turns in the frame
+  // (the Surface's `turn`, which its layout leaves room for), as in the Steel Hat
+  // phone clip, with its Y-tilt never more than the tilt itself (≤ 20°).
+  const TILTS = {
+    card: (t, W) => `perspective(${W * 1.6}px) rotateX(${t * 0.9}deg) rotateY(${-t}deg) rotateZ(${t * 0.12}deg)`,
+    phone: (t, W, c) => `perspective(${W * 1.6}px) rotateX(${t * 0.5}deg) rotateY(${-t * 0.8}deg) rotateZ(${t * c.turn}deg)`,
+  };
+
   // Builds the scene inside `el` (sized to the frame) and returns draw(state).
-  // The Device frame's geometry (the browser bar) comes from the state's Surface.
+  // The Device frame's geometry (the browser bar, the phone's bezel) comes from the state's Surface.
   function mount(el, { frame, screen, settings }) {
     const backdrop = BACKDROPS[settings.backdrop];
     if (!backdrop) throw new Error(`CSS Renderer: Backdrop "${settings.backdrop}" isn't supported`);
     const { width: W, height: H } = frame;
     const { colour, css } = backdrop(settings.brandColour);
     const dark = lum(colour) < 0.5;
+    const phone = settings.deviceFrame === "phone";
+    const tiltTransform = TILTS[phone ? "phone" : "card"];
     Object.assign(el.style, { position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", overflow: "hidden" });
 
     div(el, `position:absolute;inset:0;background:${css}`);
@@ -62,6 +73,21 @@
     img.style.cssText = "position:absolute;left:0;top:0;display:block";
     viewport.appendChild(img);
 
+    // Phone Device frame: Nick's simple drawn shape (ticket 11), a near-black body
+    // with a faint outer edge, and a thin grey ring round the Screen. Proportions
+    // are shares of the body's width, measured from his drawing.
+    function phoneStyle(b, c) {
+      const w = b.width;
+      Object.assign(surface.style, {
+        background: "#0a0a0a", borderRadius: w * 0.086 + "px",
+        boxShadow: `inset 0 0 0 ${Math.max(1, w * 0.0027)}px #262626, 0 ${w * 0.04}px ${w * 0.12}px rgba(0,0,0,${dark ? 0.55 : 0.28})`,
+      });
+      Object.assign(viewport.style, {
+        left: c.bezel + "px", right: c.bezel + "px", bottom: "auto", top: c.bezel + "px",
+        borderRadius: w * 0.059 + "px", boxShadow: `0 0 0 ${Math.max(1, w * 0.0053)}px #404040`,
+      });
+    }
+
     let laidOut = null;
     function place(c) {
       const b = c.bounds, bh = c.bar;
@@ -73,6 +99,7 @@
       Object.assign(bar.style, { display: bh ? "flex" : "none", height: bh + "px", gap: bh * 0.3 + "px", paddingLeft: bh * 0.55 + "px", borderBottom: `${Math.max(1.5, bh / 20)}px solid #dcdce0` });
       for (const b of buttons) Object.assign(b.style, { width: bh * 0.36 + "px", height: bh * 0.36 + "px" });
       Object.assign(viewport.style, { top: bh + "px", height: c.viewportHeight + "px" });
+      if (phone) phoneStyle(b, c);
       Object.assign(img.style, { width: c.width + "px", height: c.imageHeight + "px" });
       laidOut = c;
     }
@@ -81,7 +108,7 @@
       if (laidOut !== st.surface) place(st.surface);
       img.style.transform = `translateY(${-st.scroll.toFixed(2)}px)`;
       const tilt = st.tilt;
-      surface.style.transform = tilt ? `perspective(${W * 1.6}px) rotateX(${tilt * 0.9}deg) rotateY(${-tilt}deg) rotateZ(${tilt * 0.12}deg)` : "none";
+      surface.style.transform = tilt ? tiltTransform(tilt, W, st.surface) : "none";
       camera.style.transform = st.zoom !== 1 || st.cx !== W / 2 || st.cy !== H / 2
         ? `translate(${W / 2}px, ${H / 2}px) scale(${st.zoom}) translate(${-st.cx}px, ${-st.cy}px)`
         : "none";
