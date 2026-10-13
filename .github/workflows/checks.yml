@@ -1,0 +1,26 @@
+# Cheap guards on every PR. Visual quality is still judged from rendered frames, not here.
+name: checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: npm ci
+      # Ubuntu 23.10+ runners block Chrome's sandbox via AppArmor; renders/ is gitignored but tests write into it.
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 && mkdir -p renders
+      - run: npx hyperframes browser ensure
+      - name: Syntax-check tools
+        run: find tools -name '*.mjs' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+      - run: npx hyperframes check films/poc
+      - run: npx hyperframes check fixtures/hold-loop
+      - run: npm test
