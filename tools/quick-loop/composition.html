@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <!--
   Quick Loop composition: one Screen image on a Backdrop, scrolled and
-  optionally zoomed into one focus area. Every frame is a closed-form
-  function of time (hf-seek), so preview and render match.
+  optionally zoomed into one focus area, optionally opening on the page
+  being drawn (the build intro: transitions.dev's UI generation over the
+  captured page's layout map). Every frame is a closed-form function of
+  time (hf-seek), so preview and render match.
   server.mjs bakes size, duration, image and config in for renders;
   the app page calls window.quick.apply(cfg) / window.quick.seek(t) for preview.
 -->
@@ -26,7 +28,10 @@
       #viewport { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; }
       #shot { position: absolute; left: 0; top: 0; display: block; }
       #dither { position: absolute; inset: 0; pointer-events: none; }
+      /* Build intro: the step dot's pulse is driven by the clock, not a CSS animation */
+      .t-gen-step i { animation: none !important; }
     </style>
+    <!--__UIGEN__-->
   </head>
   <body>
     <div id="root" data-composition-id="quick-loop" data-no-timeline="" data-start="0" data-duration="__D__" data-fps="60" data-width="__W__" data-height="__H__">
@@ -56,9 +61,15 @@
           focusMove: "end",       // "end" scroll then zoom in | "start" open zoomed, pull out, scroll | "inout" zoom in, out, scroll | "scroll" no zoom
           scrollLimit: 1,         // where the bottom of the last view stops, as a fraction of the image height
           loopBack: false,
+          intro: "none",          // build intro: "none" | "skeleton" | "skeleton-texts" (needs a layout map)
+          layout: null,           // the captured page's layout map: { width, height, title, code, parts }
         };
+        const BUILD_MS = 2400;    // the runtime's drawing time (its default); the build runs about 1.09x this
+        const SETTLE = 0.8;       // s for the card to ease from its flat build pose into the first Shot
         const $ = (id) => document.getElementById(id);
-        let cfg = { ...DEFAULTS }, geo = null, time = 0;
+        let cfg = { ...DEFAULTS }, geo = null, time = 0, gen = null;
+        // seconds of build at the start; 0 without one
+        const introLength = () => (cfg.intro !== "none" && cfg.layout && window.UIGeneration ? Math.round(BUILD_MS * 1.09 + 150) / 1000 : 0);
 
         const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
         const lerp = (a, b, k) => a + (b - a) * k;
@@ -121,7 +132,16 @@
           geo = { W, H, cw, ch, vh, bh, left, top, ih, zoomTo, keys };
         }
 
+        // The build holds the card flat and still (the drawing is pinned to the layout), then eases into the Shot.
         function stateAt(t) {
+          const I = introLength();
+          if (!I) return shotAt(t);
+          if (t < I) return { scroll: 0, zoom: 0, tilt: 0 };
+          const st = shotAt(t - I), u = ease(Math.min(1, (t - I) / SETTLE));
+          return { scroll: lerp(0, st.scroll, u), zoom: lerp(0, st.zoom, u), tilt: lerp(0, st.tilt, u) };
+        }
+
+        function shotAt(t) {
           const k = Math.min(1, Math.max(0, t / cfg.duration)), keys = geo.keys;
           let i = 0;
           while (i < keys.length - 2 && k > keys[i + 1][0]) i++;
@@ -172,7 +192,43 @@
           const shot = $("shot");
           if (cfg.image && shot.getAttribute("src") !== cfg.image.url) shot.src = cfg.image.url;
           shot.style.visibility = cfg.image ? "visible" : "hidden"; // no image yet: hide Chrome's broken-image border
+          // the drawing takes the backdrop's tone: light lines on dark, the stock greys on light
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.setProperty("--gen-surface", cfg.bg);
+          if (gen) { gen.remove(); gen = null; }
+          if (introLength()) {
+            const now = time;
+            seek(0); // the flat build pose, measured by the runtime
+            time = now;
+            gen = window.UIGeneration.build($("face"), buildMeasure(), {
+              mode: cfg.intro, duration: BUILD_MS, code: cfg.layout.code, title: cfg.layout.title,
+              done: `${cfg.layout.title} ready`,
+            });
+          }
           seek(time);
+        }
+
+        // The layout map (CSS px of the captured page) in the card's pixels, kept to the first screen:
+        // under the browser bar, inside the viewport. Then the runtime's own limits: 60 parts (largest kept),
+        // and 5 key elements, interactive ones first.
+        function buildMeasure() {
+          const { cw, ch, vh, bh } = geo, L = cfg.layout, s = cw / L.width;
+          const parts = [];
+          for (const p of L.parts) {
+            const y = p.y * s;
+            if (y >= vh - 4 || y + p.h * s <= 0) continue;
+            const q = { ...p, x: p.x * s, y: y + bh, w: p.w * s, h: Math.min(p.h * s, vh - y), r: (p.r || 0) * s };
+            if (p.lines) {
+              q.lines = p.lines.filter((l) => (l.y + l.h) * s <= vh).map((l) => ({ x: l.x * s, x2: l.x2 * s, y: l.y * s + bh, h: l.h * s }));
+              if (!q.lines.length) continue;
+            }
+            if (p.paths) q.paths = p.paths.map((g) => ({ ...g, m: [...g.m.slice(0, 5).map((v) => v * s), g.m[5] * s + bh] }));
+            parts.push(q);
+          }
+          const keep = new Set([...parts].sort((a, b) => b.w * b.h - a.w * a.h).slice(0, 60));
+          const kept = parts.filter((p) => keep.has(p)), boxes = kept.filter((p) => p.kind === "box");
+          [...boxes.filter((b) => b.interactive), ...boxes.filter((b) => !b.interactive).sort((a, b) => b.w * b.h - a.w * a.h)].slice(0, 5).forEach((k) => (k.key = true));
+          return { w: cw, h: ch, r: Math.min(cfg.radius * (cw / 1400), cw / 2, ch / 2), parts: kept };
         }
 
         // The zoom is applied by resizing the Screen (Z times every length), not by
@@ -199,11 +255,13 @@
           Object.assign($("shot").style, { width: cw * Z + "px", height: ih * Z + "px", transform: `translateY(${-(st.scroll * Z).toFixed(2)}px)` });
           const tl = cfg.tilt * st.tilt;
           $("card").style.transform = tl ? `perspective(${W * 1.6 * Z}px) rotateX(${tl * 0.9}deg) rotateY(${-tl}deg) rotateZ(${tl * 0.12}deg)` : "none";
+          if (gen) gen.seek(t * 1000);
         }
 
         function apply(next) { cfg = { ...DEFAULTS, ...cfg, ...next }; layout(); paint(); }
 
-        window.quick = { apply, seek, get duration() { return cfg.duration; } };
+        // duration: the whole Loop, the build intro included
+        window.quick = { apply, seek, get duration() { return cfg.duration + introLength(); }, get intro() { return introLength(); } };
         window.addEventListener("hf-seek", (e) => seek(e.detail.time));
         apply(window.__quickConfig || {});
       })();

@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { capturePage } from "../library/capture.mjs";
+import { capturePageWithLayout } from "../library/capture.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "../..");
@@ -21,11 +21,20 @@ const MAX_W = 3840, MAX_PIXELS = 50e6; // keeps Chrome's decoded image well unde
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // 1x1 transparent
 const hfBin = join(repo, "node_modules", "hyperframes", "bin", "hyperframes.mjs");
 const template = () => readFileSync(join(here, "composition.html"), "utf8");
+// The UI generation runtime (transitions.dev) for the build intro, inlined so a render job needs no extra files.
+const vendor = join(repo, "tools", "library", "vendor");
+const uiGeneration = () => `<style>${readFileSync(join(vendor, "ui-generation.css"), "utf8")}</style>
+<script>(() => {
+${
+  readFileSync(join(vendor, "ui-generation.js"), "utf8").replace(/^export \{[^}]*\};?$/m, "").replace(/^export /gm, "")}
+})();</script>`;
 const jobs = new Map();
 const UPLOAD_DAYS = 7; // uploads unused for this long are deleted when the server starts
 
 // Capture width per Screen viewport: CSS px and device scale.
 const CAPTURE = { "9:19.5": [390, 3], "4:3": [1024, 2] };
+// How much of the page's top the layout map reads, as a multiple of the capture width: enough for any viewport's first screen.
+const LAYOUT_HEIGHT = { "9:19.5": 19.5 / 9 };
 
 function pruneUploads() {
   const cutoff = Date.now() - UPLOAD_DAYS * 864e5;
@@ -41,7 +50,8 @@ function composition({ width, height, duration, src, config }) {
   return template()
     .replaceAll("__W__", String(width)).replaceAll("__H__", String(height))
     .replaceAll("__D__", String(duration)).replace("__SRC__", src)
-    .replace("/*__CONFIG__*/", config ? `window.__quickConfig = ${JSON.stringify(config)};` : "");
+    .replace("/*__CONFIG__*/", () => (config ? `window.__quickConfig = ${JSON.stringify(config).replace(/</g, "\\u003c")};` : ""))
+    .replace("<!--__UIGEN__-->", () => uiGeneration());
 }
 
 function send(res, code, body, type = "application/json") {
@@ -76,10 +86,15 @@ async function upload(buf) {
   return { id, url: `/uploads/${id}.jpg`, w: width, h: height };
 }
 
-// URL capture: the Library's (cookie banners and listed selectors hidden), sized by Screen viewport.
+// URL capture: the Library's (cookie banners and listed selectors hidden), sized by Screen viewport,
+// with the layout map of its first screen for the build intro, kept beside the image.
 async function capture({ url, viewport, hide }) {
   const [width, scale] = CAPTURE[viewport] || [1440, 2];
-  return upload(await capturePage({ url, width, scale, hide }));
+  const layoutHeight = Math.round(width * (LAYOUT_HEIGHT[viewport] || 0.8));
+  const { png, layout } = await capturePageWithLayout({ url, width, scale, hide, layoutHeight });
+  const img = await upload(png);
+  writeFileSync(join(uploads, `${img.id}.layout.json`), JSON.stringify(layout));
+  return { ...img, layout };
 }
 
 function render(cfg) {
@@ -90,7 +105,8 @@ function render(cfg) {
   copyFileSync(join(uploads, imgId), join(dir, "assets", imgId));
   const src = `assets/${imgId}`;
   const config = { ...cfg, image: { ...cfg.image, url: src } };
-  writeFileSync(join(dir, "index.html"), composition({ ...config, src, config }));
+  // `length` is the whole Loop as the composition plays it, the build intro included
+  writeFileSync(join(dir, "index.html"), composition({ ...config, duration: cfg.length || cfg.duration, src, config }));
   writeFileSync(join(dir, "hyperframes.json"), JSON.stringify({ paths: { assets: "assets" } }, null, 2));
   writeFileSync(join(dir, "meta.json"), JSON.stringify({ id: `quick-${id}`, name: `quick-${id}` }));
 
