@@ -16,14 +16,16 @@
       #root { position: relative; overflow: hidden; }
       #backdrop { position: absolute; inset: 0; }
       #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-      #card {
-        position: absolute; overflow: hidden; background: #fff;
-        transform-origin: 50% 50%; backface-visibility: hidden;
-      }
+      /* The tilted layer keeps a transparent margin round the Screen so its
+         edges are filtered inside the texture, not cut aliased at the layer's edge. */
+      #card { position: absolute; padding: 2px; transform-origin: 50% 50%; }
+      /* No background: one would leak through the anti-aliased rounded corners as a light fringe. */
+      #face { position: relative; overflow: hidden; }
       #bar { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; }
       #bar i { display: block; border-radius: 50%; }
       #viewport { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; }
-      #shot { position: absolute; left: 0; top: 0; display: block; will-change: transform; }
+      #shot { position: absolute; left: 0; top: 0; display: block; }
+      #dither { position: absolute; inset: 0; pointer-events: none; }
     </style>
   </head>
   <body>
@@ -31,10 +33,13 @@
       <div id="backdrop"></div>
       <div id="stage">
         <div id="card">
-          <div id="bar"><i></i><i></i><i></i></div>
-          <div id="viewport"><img id="shot" src="__SRC__" alt=""></div>
+          <div id="face">
+            <div id="bar"><i></i><i></i><i></i></div>
+            <div id="viewport"><img id="shot" src="__SRC__" alt=""></div>
+          </div>
         </div>
       </div>
+      <canvas id="dither"></canvas>
     </div>
     <script>/*__CONFIG__*/</script>
     <script>
@@ -125,48 +130,75 @@
           return { scroll: lerp(a[1], b[1], u), zoom: lerp(a[2], b[2], u), tilt: lerp(a[3], b[3], u) };
         }
 
+        // Fixed, seeded noise of about +-2 levels over the frame: breaks up the
+        // 8-bit steps in dark shadows and glows that the encoder turns into bands.
+        function dither(W, H) {
+          const c = $("dither");
+          if (c.width === W && c.height === H) return;
+          c.width = W; c.height = H;
+          const ctx = c.getContext("2d"), img = ctx.createImageData(W, H), d = img.data;
+          let seed = 1;
+          for (let i = 0; i < d.length; i += 4) {
+            seed = (seed * 1664525 + 1013904223) >>> 0;
+            const v = seed >>> 24;
+            d[i] = d[i + 1] = d[i + 2] = v & 1 ? 255 : 0; // white lifts, black lowers
+            d[i + 3] = (v >> 1) % 10;                   // alpha 0..9 of 255
+          }
+          ctx.putImageData(img, 0, 0);
+        }
+
+        // Layered: a tight contact shadow plus progressively wider, fainter ones, so the
+        // falloff is gradual instead of one dense slab (which reads as a block on dark backdrops).
+        function shadow(w, dark, fade = 1) {
+          const k = (dark ? 1 : 0.45) * fade;
+          const layers = [[0.002, 0.006, 0.28], [0.008, 0.02, 0.2], [0.02, 0.05, 0.16], [0.045, 0.12, 0.12]]
+            .map(([y, b, a]) => `0 ${w * y}px ${w * b}px rgba(0,0,0,${a * k})`);
+          return [...layers, `0 0 0 1px rgba(${dark ? "255,255,255,0.06" : "0,0,0,0.06"})`].join(", ");
+        }
+
         function paint() {
-          const { W, H, cw, ch, vh, bh, left, top, ih, zoomTo } = geo;
-          const root = $("root");
-          Object.assign(root.style, { width: W + "px", height: H + "px" });
+          const { W, H } = geo;
+          dither(W, H);
+          Object.assign($("root").style, { width: W + "px", height: H + "px" });
           Object.assign(document.body.style, { width: W + "px", height: H + "px" });
 
           const dark = lum(cfg.bg) < 0.5;
           $("backdrop").style.background = cfg.backdrop === "glow"
             ? `radial-gradient(ellipse 60% 55% at 50% 48%, ${shade(cfg.bg, dark ? 0.16 : 0.35)} 0%, ${cfg.bg} 70%)`
             : cfg.bg;
-
-          const card = $("card");
-          Object.assign(card.style, {
-            left: left + "px", top: top + "px", width: cw + "px", height: ch + "px",
-            borderRadius: cfg.radius * (cw / 1400) + "px",
-            boxShadow: cfg.shadow
-              ? `0 ${cw * 0.03}px ${cw * 0.08}px rgba(0,0,0,${dark ? 0.55 : 0.22}), 0 0 0 1px rgba(${dark ? "255,255,255,0.06" : "0,0,0,0.06"})`
-              : "none",
-          });
           const bar = $("bar");
-          bar.style.display = bh ? "flex" : "none";
-          Object.assign(bar.style, { height: bh + "px", gap: bh * 0.3 + "px", paddingLeft: bh * 0.55 + "px", background: "#ececee", borderBottom: "1px solid #dcdce0" });
-          [...bar.children].forEach((d, i) => Object.assign(d.style, { width: bh * 0.36 + "px", height: bh * 0.36 + "px", background: ["#ff5f57", "#febc2e", "#28c840"][i] }));
-          Object.assign($("viewport").style, { top: bh + "px", height: vh + "px" });
+          Object.assign(bar.style, { display: geo.bh ? "flex" : "none", background: "#ececee", borderBottom: "1px solid #dcdce0" });
+          [...bar.children].forEach((d, i) => { d.style.background = ["#ff5f57", "#febc2e", "#28c840"][i]; });
           const shot = $("shot");
           if (cfg.image && shot.getAttribute("src") !== cfg.image.url) shot.src = cfg.image.url;
-          Object.assign(shot.style, { width: cw + "px", height: ih + "px" });
+          shot.style.visibility = cfg.image ? "visible" : "hidden"; // no image yet: hide Chrome's broken-image border
           seek(time);
         }
 
+        // The zoom is applied by resizing the Screen (Z times every length), not by
+        // a CSS scale, so Chrome always rasterises it at its on-screen size: a scaled
+        // 3D layer is drawn at 1x and only re-rasterised once it stops moving.
         function seek(t) {
           time = t;
           if (!geo) return;
-          const st = stateAt(t);
-          $("shot").style.transform = `translate3d(0, ${-st.scroll.toFixed(2)}px, 0)`;
+          const { W, H, cw, ch, vh, bh, left, top, ih, zoomTo: z } = geo;
+          const st = stateAt(t), zoom = z ? st.zoom : 0;
+          const Z = z ? lerp(1, z.Z, zoom) : 1;
+          const px = z ? lerp(W / 2, z.cx, zoom) : W / 2, py = z ? lerp(H / 2, z.cy, zoom) : H / 2;
+          const dark = lum(cfg.bg) < 0.5;
+          Object.assign($("card").style, { left: W / 2 + Z * (left - px) - 2 + "px", top: H / 2 + Z * (top - py) - 2 + "px" });
+          Object.assign($("face").style, {
+            width: cw * Z + "px", height: ch * Z + "px",
+            borderRadius: cfg.radius * (cw / 1400) * Z + "px",
+            boxShadow: cfg.shadow ? shadow(cw * Z, dark, 1 - zoom) : "none", // fades out as the zoom fills the frame
+          });
+          const b = bh * Z;
+          Object.assign($("bar").style, { height: b + "px", gap: b * 0.3 + "px", paddingLeft: b * 0.55 + "px" });
+          [...$("bar").children].forEach((d) => Object.assign(d.style, { width: b * 0.36 + "px", height: b * 0.36 + "px" }));
+          Object.assign($("viewport").style, { top: b + "px", height: vh * Z + "px" });
+          Object.assign($("shot").style, { width: cw * Z + "px", height: ih * Z + "px", transform: `translateY(${-(st.scroll * Z).toFixed(2)}px)` });
           const tl = cfg.tilt * st.tilt;
-          $("card").style.transform = tl ? `perspective(${geo.W * 1.6}px) rotateX(${tl * 0.9}deg) rotateY(${-tl}deg) rotateZ(${tl * 0.12}deg)` : "none";
-          const z = geo.zoomTo;
-          if (z && st.zoom > 0) {
-            const Z = lerp(1, z.Z, st.zoom), px = lerp(geo.W / 2, z.cx, st.zoom), py = lerp(geo.H / 2, z.cy, st.zoom);
-            $("stage").style.transform = `translate(${geo.W / 2}px, ${geo.H / 2}px) scale(${Z}) translate(${-px}px, ${-py}px)`;
-          } else $("stage").style.transform = "none";
+          $("card").style.transform = tl ? `perspective(${W * 1.6 * Z}px) rotateX(${tl * 0.9}deg) rotateY(${-tl}deg) rotateZ(${tl * 0.12}deg)` : "none";
         }
 
         function apply(next) { cfg = { ...DEFAULTS, ...cfg, ...next }; layout(); paint(); }

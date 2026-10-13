@@ -18,7 +18,7 @@ for (const d of [uploads, jobsDir]) mkdirSync(d, { recursive: true });
 
 const PORT = Number(process.env.PORT || 4321);
 const MAX_W = 3840, MAX_PIXELS = 50e6; // keeps Chrome's decoded image well under a few hundred MB
-const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // 1x1 transparent
 const hfBin = join(repo, "node_modules", "hyperframes", "bin", "hyperframes.mjs");
 const template = () => readFileSync(join(here, "composition.html"), "utf8");
 const jobs = new Map();
@@ -99,18 +99,34 @@ function render(cfg) {
   const job = { id, status: "rendering", log: "", output: null, started: Date.now() };
   jobs.set(id, job);
   const env = { ...process.env, PATH: `${process.env.PATH};${join(process.env.LOCALAPPDATA || "", "Microsoft", "WinGet", "Links")}` };
-  const child = spawn(process.execPath, [hfBin, "render", dir, "--output", output, "--quality", cfg.quality || "looks"], { cwd: repo, env });
+  const run = (cmd, args, next) => {
+    const child = spawn(cmd, args, { cwd: repo, env });
+    child.stdout.on("data", onData);
+    child.stderr.on("data", onData);
+    child.on("error", (e) => onData(String(e)));
+    child.on("close", (code) => (code === 0 ? next() : finish()));
+  };
   const onData = (d) => { job.log = (job.log + d.toString()).slice(-4000); };
-  child.stdout.on("data", onData);
-  child.stderr.on("data", onData);
-  child.on("close", (code) => {
-    job.status = code === 0 && existsSync(output) ? "done" : "failed";
+  const finish = () => {
+    job.status = existsSync(output) ? "done" : "failed";
     if (job.status === "done") {
       job.output = `/renders/${output.slice(out.length + 1)}`;
       rmSync(dir, { recursive: true, force: true }); // the job copies the full screenshot; keep it only when a render fails
     }
     job.seconds = Math.round((Date.now() - job.started) / 1000);
-  });
+  };
+  const quality = cfg.quality || "looks";
+  if (quality === "draft") run(process.execPath, [hfBin, "render", dir, "--output", output, "--quality", "draft"], finish);
+  else {
+    // Lossless frames, then our own encode: an RGB->YUV conversion with error diffusion keeps dark
+    // shadows and glows from banding, which HyperFrames' encode (even at CRF 4) does not.
+    const frames = join(dir, "frames");
+    run(process.execPath, [hfBin, "render", dir, "--format", "png-sequence", "--output", frames], () =>
+      run("ffmpeg", ["-v", "error", "-y", "-framerate", "60", "-i", join(frames, "frame_%06d.png"),
+        "-vf", "scale=out_color_matrix=bt709:flags=accurate_rnd+full_chroma_int+error_diffusion,format=yuv420p",
+        "-c:v", "libx264", "-preset", "slow", "-crf", quality === "delivery" ? "10" : "16",
+        "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-movflags", "+faststart", output], finish));
+  }
   return job;
 }
 
