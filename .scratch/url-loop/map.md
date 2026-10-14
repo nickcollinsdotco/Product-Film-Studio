@@ -67,3 +67,4 @@ Mostly agrees with Steel Hat. Worth reading in full before writing our anti-patt
 - Browser chrome in frame: keep the browser frame (recommended) or offer snapcn-style cropped, chrome-free framing as well?
 - Form: a hosted web app, a local tool or a CLI? Hosting means capture and rendering on a server (headless Chrome, HyperFrames, FFmpeg) and real running costs.
 - Whether to publish a Remotion `scroll-capture` component into snapcn's ecosystem (option C) as a cheap distribution probe. It splits the stack; revisit only if the X probe shows pull from Remotion users.
+- Live animations in a Capture (issue 09): the frame-stepped clock shim works on nickcollins.co. Still unknown: how it combines with scrolling, the loop seam, and picking the region. Deferred behind 01.

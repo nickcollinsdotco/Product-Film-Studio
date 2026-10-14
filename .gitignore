@@ -176,3 +176,6 @@ projects/
 
 # The Library copy synced into the fixture Project (npm run library:sync fixtures/hold-loop)
 fixtures/*/library/
+
+# Live-capture probe clip (5 MB; the contact sheet is committed)
+.scratch/live-capture-probe/*.mp4
