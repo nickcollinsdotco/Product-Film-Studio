@@ -92,9 +92,9 @@ A good first slate is 3 to 5 Loops (one per strong Screen or feature) and, if th
 
 <!-- Copy the card below for each Loop. Only Screen and Focus path are required; the rest fall back to the Look table above.
 
-Loops skip the Shot list and Contact sheet: the focus path is the Shot list. A half-size Draft render checks composition and motion; a Loop only ships after a Final render at full size. (Batch Draft renders and a review page wait until a Project has at least two Loops.)
+Loops skip the Shot list and Contact sheet: the focus path is the Shot list. A half-size Draft render checks composition and motion; a Loop only ships after a Final render at full size. With two or more Loops, Drafts are reviewed together on a review page at card size.
 
-The guide on the portfolio is the Steel Hat phone clip (references/own/steel-hat-phone.mp4); compare it side by side with each Loop, at the same display height. A Loop ships when it looks right at card size next to it and, if it's a Bookend, its Seam passes the check.
+The guide on the portfolio is the Steel Hat phone clip (references/own/steel-hat-phone.mp4); compare it side by side with each Loop, at the same display height. A Loop ships when it looks right at card size next to it and, if it's a Bookend, its Seam passes the check. One subject, one push-in at most: the Camera settles on the Notice for at least 1s, then returns; a Scroll runs at constant zoom.
 
 Every Loop opens on a lit, settled framing. Frame 0 is the poster when autoplay is blocked (Safari Low Power, reduced motion) and the first thing seen on every repeat, so a separate poster image doesn't fix a dark opening.
 
