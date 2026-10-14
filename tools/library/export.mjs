@@ -107,11 +107,11 @@ const FROM_FRAMES = ["-vf", "scale=out_color_matrix=bt709:flags=accurate_rnd+ful
 // The portfolio Rendition: H.264 High, yuv420p, faststart, no audio, two-pass to
 // the target bitrate. Its actual size is checked: an overshoot gets one re-encode
 // at a bitrate lowered by the overshoot, and a file still over is deleted.
-// `input` is ffmpeg's input arguments: a video, or a Final's PNG sequence (`frames`).
-async function encodeRendition(input, output, { duration, maxBytes, work, quiet, frames }) {
+// `input` is ffmpeg's input arguments: a video, or a Final's PNG sequence (`fromFrames`).
+async function encodeRendition(input, output, { duration, maxBytes, work, quiet, fromFrames }) {
   const encode = async (target) => {
     const bitrate = Math.max(MIN_BITRATE, Math.floor(target));
-    const common = ["-y", "-v", "error", ...input, "-an", ...(frames ? FROM_FRAMES : []), "-c:v", "libx264", "-preset", "slow", "-profile:v", "high", "-pix_fmt", "yuv420p",
+    const common = ["-y", "-v", "error", ...input, "-an", ...(fromFrames ? FROM_FRAMES : []), "-c:v", "libx264", "-preset", "slow", "-profile:v", "high", "-pix_fmt", "yuv420p",
       "-b:v", String(bitrate), "-passlogfile", join(work, "x264")];
     await run("ffmpeg", [...common, "-pass", "1", "-f", "null", "-"], quiet);
     await run("ffmpeg", [...common, "-pass", "2", "-movflags", "+faststart", output], quiet);
@@ -165,19 +165,11 @@ export async function exportLoop({ project, entry, size: sizeSpec, length, fps =
     // A Draft takes HyperFrames' fast encode; a Final renders lossless frames for our own conversion.
     const composition = relative(root, temp).replaceAll("\\", "/");
     const source = final ? "png-sequence" : "video";
-    let input;
-    if (final) {
-      const frames = join(work, "frames");
-      await run(process.execPath, [hfBin, "render", root, "--composition", composition, "--format", "png-sequence", "--output", frames,
-        "--fps", String(fps), "--quiet"], quiet);
-      input = ["-framerate", String(fps), "-i", join(frames, "frame_%06d.png")];
-    } else {
-      const render = join(work, "render.mp4");
-      await run(process.execPath, [hfBin, "render", root, "--composition", composition, "--output", render,
-        "--fps", String(fps), "--crf", "10", "--quiet"], quiet);
-      input = ["-i", render];
-    }
-    const bitrate = await encodeRendition(input, output, { duration, maxBytes, work, quiet, frames: final });
+    const rendered = join(work, final ? "frames" : "render.mp4");
+    await run(process.execPath, [hfBin, "render", root, "--composition", composition, "--output", rendered, "--fps", String(fps), "--quiet",
+      ...(final ? ["--format", "png-sequence"] : ["--crf", "10"])], quiet);
+    const input = final ? ["-framerate", String(fps), "-i", join(rendered, "frame_%06d.png")] : ["-i", rendered];
+    const bitrate = await encodeRendition(input, output, { duration, maxBytes, work, quiet, fromFrames: final });
     return { output, ...size, duration, fps, bitrate, source, seam: seam.checked ? { ...seam, image: seamImage } : null, warnings };
   } finally {
     rmSync(temp, { force: true });

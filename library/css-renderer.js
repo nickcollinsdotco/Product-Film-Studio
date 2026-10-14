@@ -74,20 +74,26 @@
 
   // Fixed, seeded noise of about ±2 levels over the frame: breaks up the 8-bit
   // steps in dark shadows and glows that the encoder turns into bands. The same
-  // seed every time, so every frame (and the Seam) carries the same noise.
+  // seed every time, so every frame (and the Seam) carries the same noise. The
+  // noise is made once per frame size and shared by every Shot's canvas.
+  const noise = {};
   function dither(el, W, H) {
     const c = el.ownerDocument.createElement("canvas");
     c.width = W; c.height = H;
     c.style.cssText = "position:absolute;inset:0;pointer-events:none";
-    const ctx = c.getContext("2d"), img = ctx.createImageData(W, H), d = img.data;
-    let seed = 1;
-    for (let i = 0; i < d.length; i += 4) {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      const v = seed >>> 24;
-      d[i] = d[i + 1] = d[i + 2] = v & 1 ? 255 : 0; // white lifts, black lowers
-      d[i + 3] = (v >> 1) % 10; // alpha 0..9 of 255
+    const ctx = c.getContext("2d"), key = W + "x" + H;
+    if (!noise[key]) {
+      const img = ctx.createImageData(W, H), d = img.data;
+      let seed = 1;
+      for (let i = 0; i < d.length; i += 4) {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        const v = seed >>> 24;
+        d[i] = d[i + 1] = d[i + 2] = v & 1 ? 255 : 0; // white lifts, black lowers
+        d[i + 3] = (v >> 1) % 10; // alpha 0..9 of 255
+      }
+      noise[key] = img;
     }
-    ctx.putImageData(img, 0, 0);
+    ctx.putImageData(noise[key], 0, 0);
     el.appendChild(c);
   }
 
