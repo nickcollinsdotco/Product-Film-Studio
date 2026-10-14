@@ -3,7 +3,8 @@
 // (imported for its side effect, read from globalThis.LoopModel).
 // Layout, easing and focus moves are lifted from Quick Loop (tools/quick-loop/composition.html).
 //
-// A Loop is { frame, screen, shots, deviceFrame } (deviceFrame is "none" unless
+// A Loop is { frame, screen, shots, deviceFrame, tilt } (deviceFrame is "none"
+// unless given; tilt, in degrees, is held for the Loop's whole length, 0 unless
 // given). screen is { w, h } in image px, plus optional Focus areas from its
 // sidecar: { layoutWidth, areas: { name: {x,y,w,h} } } in 1x px at layoutWidth. A Shot is { template, start, duration, params, cut }.
 // State is { scroll, zoom, cx, cy, tilt, surface }: the Camera puts frame point
@@ -18,6 +19,7 @@
   const TILT = 8; // degrees at full tilt, as Quick Loop
   const MAX_TILT = 20; // beyond this a flat Surface reads as cardboard (ticket 11)
   const PUSH = 1.08; // zoom factor of a Hold's push in or pull out
+  const SETTLE = 0.4, MIN_SETTLE = 1; // a push-settle's still tail: this share of its Shot, and never under 1s (seconds)
   const SIDEWAYS = 0.05; // two areas closer than this share of the viewport's height in scroll are side by side
 
   // Surface geometry for a Frame size, Screen and Device frame (Quick Loop's card
@@ -99,6 +101,37 @@
     return t;
   }
 
+  // The close-up of an area from its settled framing `landed`: the zoom fits the
+  // area within `fill` (0 to 1) of the frame's width and height, by default the
+  // Surface's own width, and the Camera aims at it as far as the Surface allows.
+  function closeUp(a, s, frame, landed, fillParam, who) {
+    const { width: W, height: H } = frame;
+    const fh = Math.min(a.h, s.viewportHeight);
+    const fill = fillParam == null || fillParam === "" ? WIDTH : Number(fillParam);
+    if (!(fill > 0 && fill <= 1)) throw new Error(`${who}: fill must be above 0 and at most 1, not ${fillParam}`);
+    const Z = clamp(Math.min((W * fill) / a.w, (H * fill) / fh), 1, 2.5);
+    const c = centreOf(a, s, landed.scroll);
+    const b = s.bounds;
+    return { ...landed, zoom: Z, cx: cameraOn(c.x, b.left, b.width, W, Z), cy: cameraOn(c.y, b.top, b.height, H, Z), tilt: 0 };
+  }
+
+  // Hold's close-up moves (the motion rule, ADR-0012 as amended; vr-loops 03).
+  // push-settle pushes in from the area's framing to its close-up, then stays
+  // still on it for the Shot's last SETTLE share, never under MIN_SETTLE seconds;
+  // the push keeps at least a quarter of the Shot, so a Shot too short for both
+  // is rejected. return goes back from the close-up to the framing. A Bookend is
+  // a push-settle then a return.
+  const MIN_PUSH = 0.25;
+  function settleShare(d) {
+    const share = Math.max(SETTLE, MIN_SETTLE / d);
+    if (!(share <= 1 - MIN_PUSH)) throw new Error(`Hold: a push-settle needs at least ${+(MIN_SETTLE / (1 - MIN_PUSH)).toFixed(2)}s to push in and settle for ${MIN_SETTLE}s, not ${d}s`);
+    return share;
+  }
+  const CLOSE_UPS = {
+    "push-settle": (base, near, from, d) => [[0, from || base], [1 - settleShare(d), near], [1, near]],
+    return: (base, near, from) => [[0, from || near], [1, base]],
+  };
+
   // Hold: stays on one Focus area with one slow move. Opens on `from` (the previous
   // Shot's closing state) or, after a cut, on its own opening for the move.
   const MOVES = {
@@ -106,11 +139,16 @@
     "pull-out": { open: (st, p) => scaleAbout(st, p, PUSH), close: (st, p) => scaleAbout(st, p, 1 / PUSH) },
     "tilt-settle": { open: (st, p, tilt) => ({ ...st, tilt }), close: (st) => ({ ...st, tilt: 0 }) },
   };
-  function hold(params, s, frame, screen, from) {
+  function hold(params, s, frame, screen, from, duration) {
     const a = area(params.focus || "whole", screen, s);
+    const base = framing(a, s, frame);
+    const closeUpMove = CLOSE_UPS[params.move];
+    if (closeUpMove) {
+      if (!a) throw new Error(`Hold: ${params.move} needs a Focus area to push in on, not "whole"`);
+      return closeUpMove(base, closeUp(a, s, frame, base, params.fill, "Hold"), from, duration);
+    }
     const move = MOVES[params.move || "push-in"];
     if (!move) throw new Error(`Hold: unknown move "${params.move}"`);
-    const base = framing(a, s, frame);
     const p = centreOf(a, s, from ? from.scroll : base.scroll);
     const open = from || move.open(base, p, tiltOf(params, TILT));
     return [[0, open], [1, move.close(open, p)]];
@@ -139,32 +177,29 @@
     const landed = framing(a, s, frame);
     const zoom = params.zoom === true || params.zoom === "true";
     if (!zoom || !a) return [[0, open], [0.85, landed], [1, landed]];
-    const { width: W, height: H } = frame;
-    const fh = Math.min(a.h, s.viewportHeight);
-    const fill = params.fill == null || params.fill === "" ? WIDTH : Number(params.fill);
-    if (!(fill > 0 && fill <= 1)) throw new Error(`Scroll: fill must be above 0 and at most 1, not ${params.fill}`);
-    const Z = clamp(Math.min((W * fill) / a.w, (H * fill) / fh), 1, 2.5);
-    const c = centreOf(a, s, landed.scroll);
-    const b = s.bounds;
-    const cx = cameraOn(c.x, b.left, b.width, W, Z), cy = cameraOn(c.y, b.top, b.height, H, Z);
-    const close = { ...landed, zoom: Z, cx, cy, tilt: 0 };
+    const close = closeUp(a, s, frame, landed, params.fill, "Scroll");
     return [[0, open], [0.55, { ...landed, tilt: open.tilt / 2 }], [0.85, close], [1, close]];
   }
   const TEMPLATES = { hold, scroll };
 
   // Keyframes [fraction, state] of every Shot, in start order. Each Shot opens on
   // the previous Shot's closing state unless it has `cut`. A closing state doesn't
-  // depend on duration, so this chain doesn't either.
+  // depend on duration, so this chain doesn't either. Shots tilt relative to the
+  // Loop's tilt, which is added last, so a Loop held at 8° settles at 8°.
   function plan(loop) {
     const s = layout(loop.frame, loop.screen, loop.deviceFrame);
     const shots = [...loop.shots].sort((a, b) => a.start - b.start);
+    const loopTilt = tiltOf({ tilt: loop.tilt }, 0);
     let prev = null;
     return shots.map((shot) => {
       const template = TEMPLATES[shot.template];
       if (!template) throw new Error(`Unknown Shot template "${shot.template}"`);
-      const keys = template(shot.params || {}, s, loop.frame, loop.screen, shot.cut ? null : prev);
+      const keys = template(shot.params || {}, s, loop.frame, loop.screen, shot.cut ? null : prev, shot.duration);
       prev = keys[keys.length - 1][1];
-      return { shot, keys, surface: s };
+      const tilted = keys.map(([k, st]) => [k, { ...st, tilt: st.tilt + loopTilt }]);
+      const over = tilted.find(([, st]) => Math.abs(st.tilt) > MAX_TILT);
+      if (over) throw new Error(`tilt ${over[1].tilt}° (the Loop's ${loopTilt}° plus a Shot's) is beyond ${MAX_TILT}° either way`);
+      return { shot, keys: tilted, surface: s };
     });
   }
 

@@ -6,7 +6,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "n
 import { basename, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sync } from "../sync.mjs";
-import { exportLoop, frameSize, scaleLength, renditionBitrate, PRESETS, RENDITION_LIMIT } from "../export.mjs";
+import { exportLoop, frameSize, scaleLength, stampSettings, renditionBitrate, PRESETS, RENDITION_LIMIT } from "../export.mjs";
 import { checkSeam } from "../seam.mjs";
 import sharp from "sharp";
 
@@ -62,6 +62,28 @@ test("a length change scales every host clip's start and duration, and the Loop'
     assert.ok(Math.abs(after[i].start - c.start * k) < 1e-6 && Math.abs(after[i].duration - c.duration * k) < 1e-6, `clip ${i}`);
   });
   assert.throws(() => scaleLength(html, 0), /length/);
+});
+
+const rootSettings = (html) => JSON.parse(html.match(/<div\b[^>]*data-composition-id[^>]*>/)[0].match(/data-settings="([^"]*)"/)[1].replace(/&quot;/g, '"'));
+
+test("a settings override is stamped on the Loop's root over its own settings, and only there", () => {
+  const html = readFileSync(join(project, "films", "fixture", "hold-scroll.html"), "utf8");
+  const tilted = stampSettings(html, { tilt: 8 });
+  assert.deepEqual(rootSettings(tilted), { tilt: 8 });
+  assert.equal(tilted.match(/data-settings=/g).length, 1, "host clips untouched");
+  const own = html.replace(/(<div\b[^>]*data-composition-id)/, '$1 data-settings="{&quot;deviceFrame&quot;:&quot;browser&quot;,&quot;tilt&quot;:3}"');
+  assert.deepEqual(rootSettings(stampSettings(own, { tilt: 0 })), { deviceFrame: "browser", tilt: 0 });
+});
+
+test("the Seam check reads the Loop's tilt from its settings", async () => {
+  const html = readFileSync(join(project, "films", "fixture", "bookend.html"), "utf8");
+  const temp = join(project, "films", "fixture", `.tilt-test-${process.pid}.html`);
+  writeFileSync(temp, stampSettings(html, { tilt: 25 }));
+  try {
+    await assert.rejects(checkSeam({ project, entry: temp, size: { width: 800, height: 450 } }), /tilt/);
+  } finally {
+    rmSync(temp, { force: true });
+  }
 });
 
 test("the Rendition targets 5 Mbps, lowered so a long Loop fits 6 MB", () => {

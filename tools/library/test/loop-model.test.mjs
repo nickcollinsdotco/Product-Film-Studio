@@ -337,3 +337,80 @@ test("at full tilt, a phone turned in the frame still fits it with margins, at e
     assert.ok(w <= 0.9 * f.width && h <= 0.9 * f.height, `${name}: turned phone ${w} × ${h}`);
   }
 });
+
+// The motion rule (ADR-0012 as amended, vr-loops 03): one push-in on a Focus
+// area that settles on it for at least 1s, then a matching return.
+const heroPush = (scale = 1, extra = {}, loopTilt) => ({
+  ...sequence([
+    ["hold", 4.5, { focus: "hero", move: "push-settle", fill: 0.8, ...extra }],
+    ["hold", 3.5, { focus: "hero", move: "return" }],
+  ], scale),
+  tilt: loopTilt,
+});
+// Every state over [a, b] in steps of a 60fps frame.
+const sampled = (loop, a, b) => { const out = []; for (let t = a; t <= b + 1e-9; t += 1 / 60) out.push([t, sceneAt(loop, t)]); return out; };
+const isStill = (states) => states.every(([, s]) => KEYS.every((k) => Math.abs(s[k] - states[0][1][k]) < 1e-9));
+
+test("a push-settle Hold opens on the area's framing and pushes in until the area fills its share of the frame", () => {
+  const loop = heroPush(), open = shotAt(loop, 0, 0), close = shotAt(loop, 0, 4.5);
+  sameState(open, { ...shotAt(sequence([["hold", 1, { focus: "hero", move: "tilt-settle", tilt: 0 }]]), 0, 1) }, "opens on the hero's settled framing");
+  assert.equal(open.zoom, 1);
+  const k = close.surface.width / tall.layoutWidth, a = tall.areas.hero;
+  const share = Math.max((a.w * k * close.zoom) / frame.width, (a.h * k * close.zoom) / frame.height);
+  assert.ok(Math.abs(share - 0.8) < 1e-9, `the hero fills ${share} of the frame`);
+  const c = onScreen(close, "hero");
+  assert.ok(Math.abs(c.x - frame.width / 2) < 1 && Math.abs(c.y - frame.height / 2) < 1, `hero centred: ${c.x}, ${c.y}`);
+});
+
+test("a push-settle Hold is still on its area for at least 1s, even in a short Shot", () => {
+  for (const scale of [1, 0.5, 0.3, 2]) {
+    const loop = heroPush(scale), d = 4.5 * scale;
+    const tail = sampled(loop, d - Math.max(1, 0.4 * d), d - 1e-6);
+    assert.ok(isStill(tail), `scale ${scale}: still over the last ${Math.max(1, 0.4 * d)}s`);
+    assert.ok(sceneAt(loop, d * 0.1).zoom > 1 && sceneAt(loop, d * 0.1).zoom < tail[0][1].zoom, `scale ${scale}: pushing in early on`);
+  }
+});
+
+test("a push-settle Shot too short to push in and still settle for 1s is rejected", () => {
+  assert.throws(() => sceneAt(heroPush(1.3 / 4.5), 0), /push-settle needs at least 1.33s/);
+  assert.doesNotThrow(() => sceneAt(heroPush(1.34 / 4.5), 0));
+});
+
+test("a push-settle then return Bookend pushes in exactly once and passes the Seam check", () => {
+  const loop = heroPush();
+  const zooms = sampled(loop, 0, 8).map(([, s]) => s.zoom);
+  const peak = zooms.indexOf(Math.max(...zooms));
+  for (let i = 1; i < zooms.length; i++) {
+    if (i <= peak) assert.ok(zooms[i] >= zooms[i - 1] - 1e-12, `zoom never backs off on the way in (frame ${i})`);
+    else assert.ok(zooms[i] <= zooms[i - 1] + 1e-12, `zoom never pushes again on the way out (frame ${i})`);
+  }
+  sameState(sceneAt(loop, 8), sceneAt(loop, 0), "returns to the opening framing");
+  assert.deepEqual(seamOf(loop, { fps: 60 }).failures, []);
+});
+
+test("a return Hold after a cut opens on the push-settle's close-up", () => {
+  const pushed = shotAt(heroPush(), 0, 4.5);
+  const alone = sequence([["hold", 3, { focus: "hero", move: "return", fill: 0.8 }]]);
+  sameState(shotAt(alone, 0, 0), pushed, "opens close up");
+  assert.equal(shotAt(alone, 0, 3).zoom, 1);
+});
+
+test("a Loop's tilt holds for its whole length, so a tilted Bookend's Seam joins identical framings", () => {
+  const loop = heroPush(1, {}, 8);
+  for (const [t, s] of sampled(loop, 0, 8)) assert.equal(s.tilt, 8, `tilt at ${t}`);
+  sameState(sceneAt(loop, 8), sceneAt(loop, 0), "t = D vs t = 0");
+  assert.deepEqual(seamOf(loop, { fps: 60 }).failures, []);
+  // Other Shots' tilts are on top of it: a tilt settle lands on the Loop's tilt, not upright.
+  const settle = { ...sequence([["hold", 2, { focus: "whole", move: "tilt-settle", tilt: 6 }]]), tilt: -4 };
+  assert.equal(sceneAt(settle, 0).tilt, 2);
+  assert.equal(sceneAt(settle, 2).tilt, -4);
+});
+
+test("a Loop's tilt is within 20° either way, with any Shot's tilt on top of it", () => {
+  for (const tilt of [21, -30, "lots"]) assert.throws(() => sceneAt(heroPush(1, {}, tilt), 0), /tilt/);
+  assert.throws(() => sceneAt({ ...sequence([["hold", 2, { move: "tilt-settle", tilt: 15 }]]), tilt: 8 }, 0), /tilt/);
+});
+
+test("a push-settle's fill must be above 0 and at most 1", () => {
+  for (const fill of [0, 1.5, "lots"]) assert.throws(() => sceneAt(heroPush(1, { fill }), 0), /fill must be above 0/);
+});

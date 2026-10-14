@@ -42,6 +42,7 @@
     card: (t, p) => `perspective(${p}px) rotateX(${t * 0.9}deg) rotateY(${-t}deg) rotateZ(${t * 0.12}deg)`,
     phone: (t, p, c) => `perspective(${p}px) rotateX(${t * 0.5}deg) rotateY(${-t * 0.8}deg) rotateZ(${t * c.turn}deg)`,
   };
+  const OVERSCAN = 0.007; // extra size per degree of tilt once the Surface fills the frame (measured on a 2x close-up at 8°)
   const MARGIN = 2; // px of transparent margin round the tilted layer, so its edges are filtered inside the texture, not cut aliased
 
   // Where the Surface and its parts land in the frame for a scene state. The zoom
@@ -49,18 +50,25 @@
   // rasterises the Screen at its on-screen size: a scaled 3D layer is drawn at 1x
   // and only re-rasterised once it stops moving. The Camera puts Surface point
   // (cx, cy) at the frame's centre. `shadow` is how much of the shadow shows: all
-  // of it at zoom 1, none once the Surface fills the frame's width.
+  // of it at zoom 1, none once the Surface fills the frame's width. A tilt pivots
+  // on the Camera's aim, the frame's centre (originX, originY from the Surface's
+  // top left), so a tilted close-up keeps the framing the Loop model gave it.
+  // Tilted, a Surface that fills the frame swings its edges into it, so it is
+  // drawn up to OVERSCAN per degree larger, eased in as the shadow fades.
   function place(st, frame) {
     const { width: W, height: H } = frame;
-    const c = st.surface, b = c.bounds, Z = st.zoom;
+    const c = st.surface, b = c.bounds;
     const fill = W / b.width;
+    const covers = 1 - (fill > 1 ? clamp01((fill - st.zoom) / (fill - 1)) : 0);
+    const Z = st.zoom * (1 + OVERSCAN * Math.abs(st.tilt || 0) * covers);
+    const left = W / 2 + Z * (b.left - st.cx), top = H / 2 + Z * (b.top - st.cy);
     return {
-      left: W / 2 + Z * (b.left - st.cx), top: H / 2 + Z * (b.top - st.cy),
+      left, top, originX: W / 2 - left, originY: H / 2 - top,
       width: b.width * Z, height: b.height * Z,
       bar: c.bar * Z, bezel: c.bezel * Z, viewportHeight: c.viewportHeight * Z,
       imageWidth: c.width * Z, imageHeight: c.imageHeight * Z, scroll: st.scroll * Z,
       radius: 14 * (b.width / 1400) * Z, perspective: W * 1.6 * Z,
-      shadow: fill > 1 ? clamp01((fill - Z) / (fill - 1)) : 0,
+      shadow: 1 - covers,
     };
   }
 
@@ -110,8 +118,8 @@
     Object.assign(el.style, { position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", overflow: "hidden" });
 
     div(el, `position:absolute;inset:0;background:${css}`);
-    // The tilted layer: the face plus a transparent margin, turning about its centre.
-    const surface = div(el, `position:absolute;padding:${MARGIN}px;transform-origin:50% 50%;backface-visibility:hidden`);
+    // The tilted layer: the face plus a transparent margin, turning about the Camera's aim.
+    const surface = div(el, `position:absolute;padding:${MARGIN}px;backface-visibility:hidden`);
     surface.className = "pfs-surface";
     // The face clips and rounds the Surface. No background: one would leak through
     // the anti-aliased rounded corners as a light fringe (except the phone's body).
@@ -151,7 +159,7 @@
 
     return function draw(st) {
       const g = place(st, frame), bh = g.bar;
-      Object.assign(surface.style, { left: g.left - MARGIN + "px", top: g.top - MARGIN + "px" });
+      Object.assign(surface.style, { left: g.left - MARGIN + "px", top: g.top - MARGIN + "px", transformOrigin: `${g.originX + MARGIN}px ${g.originY + MARGIN}px` });
       Object.assign(face.style, {
         width: g.width + "px", height: g.height + "px", borderRadius: g.radius + "px",
         boxShadow: [...shadow(g.width, dark, g.shadow), `0 0 0 1px rgba(${dark ? "255,255,255,0.06" : "0,0,0,0.06"})`].join(", "),

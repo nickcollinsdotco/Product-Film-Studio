@@ -45,3 +45,21 @@ test("the shadow fades from full at zoom 1 to none once the Surface fills the fr
   const mid = place(stateOf({ zoom: (1 + fill) / 2 }), frame).shadow;
   assert.ok(mid > 0 && mid < 1, `half way: ${mid}`);
 });
+
+test("a tilt pivots on the Camera's aim, so a tilted close-up keeps its framing", () => {
+  for (const st of [stateOf(), stateOf({ zoom: 2, cx: 500, cy: 300, scroll: 80 })]) {
+    const g = place(st, frame);
+    near(g.left + g.originX, frame.width / 2, "pivot x at mid-frame");
+    near(g.top + g.originY, frame.height / 2, "pivot y at mid-frame");
+  }
+});
+
+test("a tilted Surface that fills the frame is drawn a little larger, so its tilted edges stay out of frame", () => {
+  const fill = frame.width / stateOf().surface.bounds.width;
+  const filled = { zoom: fill * 1.2, cx: 600, cy: 400 };
+  const flat = place(stateOf(filled), frame), tilted = place(stateOf({ ...filled, tilt: 8 }), frame);
+  assert.ok(tilted.width > flat.width * 1.02, `${tilted.width} vs ${flat.width}`);
+  near(tilted.left + tilted.originX, frame.width / 2, "still pivots mid-frame");
+  // At zoom 1 a tilt changes nothing but the angle: the Backdrop shows round the Surface anyway.
+  near(place(stateOf({ tilt: 8 }), frame).width, place(stateOf(), frame).width, "zoom 1");
+});

@@ -49,7 +49,7 @@ function readLoop(root, html, frame) {
   const sidecar = sidecarOf(file);
   const screen = { file, w: Number(v.screenWidth), h: Number(v.screenHeight), ...(existsSync(sidecar) ? JSON.parse(readFileSync(sidecar, "utf8")) : {}) };
   const settings = settingsOf(root, JSON.parse(top["data-settings"] || "{}"));
-  return { shape: top["data-loop-shape"], duration: parseFloat(top["data-duration"]), settings, loop: { frame, screen, shots, deviceFrame: settings.deviceFrame } };
+  return { shape: top["data-loop-shape"], duration: parseFloat(top["data-duration"]), settings, loop: { frame, screen, shots, deviceFrame: settings.deviceFrame, tilt: settings.tilt } };
 }
 
 // Draws t = D beside t = 0 with the Project's own Library copy, in HyperFrames' browser.
