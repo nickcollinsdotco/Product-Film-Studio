@@ -8,6 +8,7 @@
     }
   },
   "enabledPlugins": {
-    "hyperframes@hyperframes": true
+    "hyperframes@hyperframes": true,
+    "vercel-plugin@vercel": false
   }
 }
