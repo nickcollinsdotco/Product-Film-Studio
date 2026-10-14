@@ -17,5 +17,6 @@
   - `renders/quick/x-nickcollins-20261014130203-43j8.mp4`: light Backdrop, scroll down to the Steelhat Studio card, zoom in, return. 13 MB (over the portfolio's 6 MB budget; fine for X).
   - `renders/quick/x-linear-20261014131141-e70u.mp4`: opens zoomed on the agent panel in the hero, pulls out, scrolls to the logo row, returns. The first try scrolled to 0.3 and ended on a dim, empty section; 0.15 keeps it on the product.
   - `renders/quick/x-vercel-20261014130834-p2dk.mp4`: scroll from the hero to the Zapier case study, zoom in, return.
-- stripe.com failed to capture: `window.UIGeneration` was undefined during the layout read, probably because the site's CSP blocked the injected script. The screenshot itself doesn't need the layout map, so capture should fall back to no layout. Not fixed yet. Raycast captured, but large parts of the page hadn't loaded, so it was dropped.
+- stripe.com failed to capture: `window.UIGeneration` was undefined during the layout read, probably because the site's CSP blocked the injected script. Fixed 2026-10-14: the layout map is now optional, so such sites capture without a build intro. Raycast captured, but large parts of the page hadn't loaded, so it was dropped.
 - Waiting on Nick to post them.
+- 2026-10-14: capture takes a theme (Quick Loop's Theme picker, `--theme light|dark` for `library:capture`). Checked: nickcollins.co in both themes; linear.app switched to light.
