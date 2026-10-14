@@ -104,6 +104,14 @@
         </label>
         <label><span>Scroll to <b id="limitv"></b></span><input id="scrollLimit" type="range" min="0.05" max="1" step="0.01" value="1"></label>
         <label><span>Return to start (seamless loop)</span><input id="loopBack" type="checkbox"></label>
+        <label><span>Build intro <b id="introv"></b></span>
+          <select id="intro" title="Open on the page being drawn by an agent, then scroll (transitions.dev UI generation). Needs a captured URL.">
+            <option value="none">None</option>
+            <option value="skeleton">Skeleton</option>
+            <option value="skeleton-texts">Skeleton + agent texts</option>
+          </select>
+        </label>
+        <div class="hint" id="introhint">Build intro needs a captured URL: it traces the page's real layout.</div>
       </section>
     </aside>
 
@@ -139,7 +147,10 @@
           backdrop: $("backdrop").value, viewport: $("viewport").value, frame: $("frame").value,
           screenWidth: Number($("screenWidth").value), radius: Number($("radius").value), tilt: Number($("tilt").value),
           shadow: $("shadow").checked, focusMove: $("focusMove").value, scrollLimit: Number($("scrollLimit").value), loopBack: $("loopBack").checked,
+          intro: cfg.layout ? $("intro").value : "none",
         });
+        $("intro").disabled = !cfg.layout;
+        $("introhint").hidden = !!cfg.layout;
         $("durv").textContent = cfg.duration + "s";
         $("limitv").textContent = Math.round(cfg.scrollLimit * 100) + "%";
         $("limit").style.top = cfg.scrollLimit * 100 + "%";
@@ -155,22 +166,27 @@
       }
 
       const quick = () => $("preview").contentWindow.quick;
+      // the whole Loop, the build intro included
+      const length = () => (quick() ? quick().duration : cfg.duration) || 0; // 0 until the settings are first read
       function update() {
         read(); fit();
         if (quick()) { quick().apply({ ...cfg }); quick().seek(t); }
+        $("introv").textContent = quick()?.intro ? `+${quick().intro.toFixed(1)}s` : "";
         $("render").disabled = !cfg.image;
       }
+      // The agent texts sit beside the Screen: leave them room inside the frame.
+      $("intro").addEventListener("input", () => { if ($("intro").value === "skeleton-texts" && +$("screenWidth").value > 0.62) $("screenWidth").value = 0.62; });
       document.querySelectorAll("aside select, aside input").forEach((el) => el.addEventListener("input", update));
       $("preview").addEventListener("load", update);
       window.addEventListener("resize", fit);
 
       // Transport.
       $("play").onclick = () => { playing = !playing; $("play").textContent = playing ? "Pause" : "Play"; last = performance.now(); };
-      $("scrub").oninput = () => { t = Number($("scrub").value) * cfg.duration; if (quick()) quick().seek(t); playing = false; $("play").textContent = "Play"; };
+      $("scrub").oninput = () => { t = Number($("scrub").value) * length(); if (quick()) quick().seek(t); playing = false; $("play").textContent = "Play"; };
       (function tick(now) {
-        if (playing && quick()) { t = (t + (now - last) / 1000) % cfg.duration; quick().seek(t); $("scrub").value = t / cfg.duration; }
+        if (playing && quick()) { t = (t + (now - last) / 1000) % length(); quick().seek(t); $("scrub").value = t / length(); }
         last = now;
-        $("time").textContent = `${t.toFixed(2)} / ${cfg.duration}s`;
+        $("time").textContent = `${t.toFixed(2)} / ${+length().toFixed(2)}s`;
         requestAnimationFrame(tick);
       })(performance.now());
 
@@ -178,6 +194,7 @@
       async function useFile(file) {
         if (!file || !file.type.startsWith("image/")) return;
         $("drop").textContent = "Uploading…";
+        cfg.layout = null; // an image has no page structure to build from
         useImage(await (await fetch("/upload", { method: "POST", body: file })).json(), file.name);
       }
       $("capture").onclick = async () => {
@@ -186,7 +203,9 @@
         $("capture").disabled = true;
         $("drop").textContent = "Capturing " + url + "… (scrolls the whole page, can take a while)";
         const body = JSON.stringify({ url, viewport: $("viewport").value, hide: $("hide").value });
-        useImage(await (await fetch("/capture", { method: "POST", body })).json(), url.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-"));
+        const img = await (await fetch("/capture", { method: "POST", body })).json();
+        cfg.layout = img.layout || null;
+        useImage(img, url.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-"));
         $("capture").disabled = false;
       };
       $("url").onkeydown = (e) => { if (e.key === "Enter") $("capture").click(); };
@@ -239,7 +258,7 @@
         read();
         $("render").disabled = true;
         $("status").textContent = "Rendering…";
-        const job = await (await fetch("/render", { method: "POST", body: JSON.stringify(cfg) })).json();
+        const job = await (await fetch("/render", { method: "POST", body: JSON.stringify({ ...cfg, length: length() }) })).json();
         if (job.error) { $("status").textContent = job.error; $("render").disabled = false; return; }
         const poll = setInterval(async () => {
           const j = await (await fetch("/jobs/" + job.id)).json();

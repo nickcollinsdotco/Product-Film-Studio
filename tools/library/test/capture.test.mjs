@@ -6,7 +6,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { capturePage, captureScreen } from "../capture.mjs";
+import { capturePage, capturePageWithLayout, captureScreen } from "../capture.mjs";
 
 // A 2000 px tall grey page with a white block at the top and blue at the bottom, plus
 // three banners: a known cookie tool's, one named by the test, and an unnamed fixed
@@ -22,9 +22,16 @@ const PAGE = `<!doctype html><html><head><style>
   <div class="banner" style="bottom: 0">This site uses cookies. Accept?</div>
 </body></html>`;
 
+// A page with a heading and a button in its first screen, and another button far below it.
+const UI = `<!doctype html><html><body style="margin: 0; font: 16px sans-serif">
+  <h1 style="margin: 40px">Ship faster</h1>
+  <button style="margin: 0 40px; width: 120px; height: 40px">Sign up</button>
+  <button style="position: absolute; top: 1500px; left: 40px">Far below</button>
+</body></html>`;
+
 let server, url;
 before(async () => {
-  server = createServer((req, res) => { res.writeHead(200, { "content-type": "text/html" }); res.end(PAGE); });
+  server = createServer((req, res) => { res.writeHead(200, { "content-type": "text/html" }); res.end(req.url === "/ui" ? UI : PAGE); });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   url = `http://127.0.0.1:${server.address().port}/`;
 });
@@ -75,4 +82,19 @@ test("writes the Screen into the Project's assets, named for its layout width an
   } finally {
     rmSync(project, { recursive: true, force: true });
   }
+});
+
+test("reads the layout map of the page's first screen: boxes and text lines in CSS px, nothing below it", async () => {
+  const { png, layout } = await capturePageWithLayout({ url: url + "ui", width: 800, scale: 1, layoutHeight: 500 });
+  assert.equal((await sharp(png).metadata()).width, 800);
+  assert.deepEqual([layout.width, layout.height, layout.title], [800, 500, "127.0.0.1"]);
+  const button = layout.parts.find((p) => p.kind === "box" && p.name === "button");
+  assert.ok(button, "the button is a part");
+  assert.deepEqual([button.x, button.w, button.h], [40, 120, 40]);
+  assert.equal(button.interactive, true);
+  const heading = layout.parts.find((p) => p.kind === "text" && p.y < 100);
+  assert.ok(heading?.lines.length, "the heading's text line is a part");
+  assert.ok(layout.parts.every((p) => p.y < 500), "nothing below the first screen");
+  assert.ok(layout.parts.every((p) => !("el" in p)), "plain JSON, no DOM references");
+  assert.ok(layout.code.length > 5, "the motion CSS lines for the texts panel");
 });

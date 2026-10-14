@@ -154,6 +154,8 @@ renders/
 .hyperframes/
 
 .claude/skills/
+# transitions.dev's licence bars republishing the skill; skills-lock.json restores it (npx skills experimental_install)
+.agents/skills/transitions-ui-generation/
 references/
 
 # Frames pulled from git-ignored references (client and third-party material)

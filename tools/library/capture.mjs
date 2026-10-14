@@ -4,7 +4,7 @@
 //   e.g. node tools/library/capture.mjs projects/deo-vr https://deovr.com --name home-full --scale 3
 // Writes <project>/assets/_source/<name>-<width>@<scale>x.png, beside the Project's other Screens;
 // its layout width is <width>, for the Focus areas sidecar.
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,12 +26,25 @@ const HIDE_DEFAULT = [
   "#cookie-notice", ".truste_overlay", ".truste_box_overlay",
 ];
 
+// The UI generation runtime (transitions.dev), run in the page to read its layout map.
+const uiGeneration = join(repo, "tools", "library", "vendor", "ui-generation.js");
+
 const hideSelectors = (hide) => String(hide || "").split(",").map((x) => x.trim()).filter(Boolean);
 
 let browserPath;
 // The full page as a PNG buffer: `width` CSS px wide at `scale` device px per CSS px.
 // `hide` is a comma-separated list of extra selectors; `height` is the viewport's (16:10 by default), which sizes any 100vh sections.
-export async function capturePage({ url, width = 1440, height, scale = 2, hide }) {
+export async function capturePage(opts) {
+  return (await capture(opts)).png;
+}
+
+// The same capture plus its layout map: the boxes, text lines and icons in the page's top `layoutHeight`
+// CSS px, read by the UI generation runtime so a Loop can open on the page being drawn (Quick Loop's build intro).
+export async function capturePageWithLayout({ layoutHeight, ...opts }) {
+  return capture({ ...opts, layoutHeight });
+}
+
+async function capture({ url, width = 1440, height, scale = 2, hide, layoutHeight }) {
   if (!/^https?:\/\//i.test(url)) url = "https://" + url;
   browserPath ??= spawnSync(process.execPath, [hfBin, "browser", "path"], { encoding: "utf8" }).stdout.trim();
   const browser = await puppeteer.launch({ executablePath: browserPath, headless: true, args: ["--hide-scrollbars"] });
@@ -59,10 +72,27 @@ export async function capturePage({ url, width = 1440, height, scale = 2, hide }
       }
     });
     await page.evaluate(() => document.fonts.ready);
-    return Buffer.from(await page.screenshot({ fullPage: true, type: "png" }));
+    const layout = layoutHeight ? await readLayout(page, width, layoutHeight, new URL(url).hostname.replace(/^www\./, "")) : null;
+    return { png: Buffer.from(await page.screenshot({ fullPage: true, type: "png" })), layout };
   } finally {
     await browser.close();
   }
+}
+
+// Parts are in CSS px from the page's top left; DOM references are dropped so the map is plain JSON.
+async function readLayout(page, width, height, title) {
+  const src = readFileSync(uiGeneration, "utf8").replace(/^export \{[^}]*\};?$/m, "").replace(/^export /gm, "");
+  await page.addScriptTag({ content: `(() => {
+${src}
+})();` });
+  return page.evaluate((width, height, title) => {
+    const { measure, deriveCode } = window.UIGeneration;
+    const R = { left: 0, top: 0, right: width, bottom: height, width, height };
+    const M = measure(document.body, { maxParts: 120, keys: 0 }, R);
+    const code = deriveCode(document.body, M, title);
+    const parts = M.parts.map(({ el, key, ...p }) => p);
+    return { width, height, title, code, parts };
+  }, width, height, title);
 }
 
 // Captures `url` into the Project's assets as _source/<name>-<width>@<scale>x.png. An existing Screen
