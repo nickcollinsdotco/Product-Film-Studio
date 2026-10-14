@@ -88,10 +88,10 @@ async function upload(buf) {
 
 // URL capture: the Library's (cookie banners and listed selectors hidden), sized by Screen viewport,
 // with the layout map of its first screen for the build intro, kept beside the image.
-async function capture({ url, viewport, hide }) {
+async function capture({ url, viewport, hide, theme }) {
   const [width, scale] = CAPTURE[viewport] || [1440, 2];
   const layoutHeight = Math.round(width * (LAYOUT_HEIGHT[viewport] || 0.8));
-  const { png, layout } = await capturePageWithLayout({ url, width, scale, hide, layoutHeight });
+  const { png, layout } = await capturePageWithLayout({ url, width, scale, hide, theme, layoutHeight });
   const img = await upload(png);
   writeFileSync(join(uploads, `${img.id}.layout.json`), JSON.stringify(layout));
   return { ...img, layout };
