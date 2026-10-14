@@ -1,6 +1,6 @@
 # URL Loop: a URL in, a premium scroll Loop out
 
-**Status:** parked until Nick calls time on the v1 Library (decided 2026-10-13).
+**Status:** active since 2026-10-14 (v1 Library called done). Issue 01 in progress.
 
 Option B from the snapcn review on 2026-10-13. Quick Loop becomes a small public tool: paste a URL, get a seamless, size-budgeted scroll Loop for portfolio cards, Framer and X. No editor. It is built from the v1 Library's Scroll Shot, Focus moves, Device frames and Backdrops, not as a second system.
 
@@ -60,6 +60,7 @@ Mostly agrees with Steel Hat. Worth reading in full before writing our anti-patt
 ## Decisions so far
 
 - 2026-10-13: Finish the v1 Library first, then try option B. Not an editor, not a component registry.
+- 2026-10-14: Keep the browser frame (no chrome-free option until someone asks). snapcn editor timing is optional, deferred behind 01.
 
 ## Fog
 
