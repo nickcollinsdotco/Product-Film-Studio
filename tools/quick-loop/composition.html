@@ -16,7 +16,8 @@
     <style>
       html, body { margin: 0; overflow: hidden; background: #000; }
       #root { position: relative; overflow: hidden; }
-      #backdrop { position: absolute; inset: 0; }
+      /* Not hit-tested: the build intro's agent texts only go where the frame reads as empty */
+      #backdrop { position: absolute; inset: 0; pointer-events: none; }
       #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
       /* The tilted layer keeps a transparent margin round the Screen so its
          edges are filtered inside the texture, not cut aliased at the layer's edge. */
