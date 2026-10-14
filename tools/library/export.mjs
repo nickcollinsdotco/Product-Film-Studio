@@ -97,13 +97,21 @@ function run(cmd, args, quiet) {
   });
 }
 
+// A Final's lossless frames are converted RGB→YUV with error diffusion (Quick
+// Loop's path, vr-loops ticket 02), which keeps dark shadows and glows from
+// banding where HyperFrames' own encode doesn't. PNGs carry no colour tags, so
+// the output is tagged BT.709 explicitly, as HyperFrames' encode is.
+const FROM_FRAMES = ["-vf", "scale=out_color_matrix=bt709:flags=accurate_rnd+full_chroma_int+error_diffusion,format=yuv420p,setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709",
+  "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709"];
+
 // The portfolio Rendition: H.264 High, yuv420p, faststart, no audio, two-pass to
 // the target bitrate. Its actual size is checked: an overshoot gets one re-encode
 // at a bitrate lowered by the overshoot, and a file still over is deleted.
-async function encodeRendition(input, output, { duration, maxBytes, work, quiet }) {
+// `input` is ffmpeg's input arguments: a video, or a Final's PNG sequence (`frames`).
+async function encodeRendition(input, output, { duration, maxBytes, work, quiet, frames }) {
   const encode = async (target) => {
     const bitrate = Math.max(MIN_BITRATE, Math.floor(target));
-    const common = ["-y", "-v", "error", "-i", input, "-an", "-c:v", "libx264", "-preset", "slow", "-profile:v", "high", "-pix_fmt", "yuv420p",
+    const common = ["-y", "-v", "error", ...input, "-an", ...(frames ? FROM_FRAMES : []), "-c:v", "libx264", "-preset", "slow", "-profile:v", "high", "-pix_fmt", "yuv420p",
       "-b:v", String(bitrate), "-passlogfile", join(work, "x264")];
     await run("ffmpeg", [...common, "-pass", "1", "-f", "null", "-"], quiet);
     await run("ffmpeg", [...common, "-pass", "2", "-movflags", "+faststart", output], quiet);
@@ -154,11 +162,23 @@ export async function exportLoop({ project, entry, size: sizeSpec, length, fps =
     if (seam.shape !== "bookend" && seam.shape !== "tour") refuseOrWarn(`${loop} has no Loop shape (data-loop-shape="bookend" or "tour" on its root), so its Seam isn't checked.`);
     if (seam.checked && !seam.pass) refuseOrWarn(`Seam check failed for ${loop} (see ${seamImage}):\n  ${seam.failures.join("\n  ")}`);
 
-    const render = join(work, "render.mp4");
-    await run(process.execPath, [hfBin, "render", root, "--composition", relative(root, temp).replaceAll("\\", "/"), "--output", render,
-      "--fps", String(fps), "--crf", "10", "--quiet"], quiet);
-    const bitrate = await encodeRendition(render, output, { duration, maxBytes, work, quiet });
-    return { output, ...size, duration, fps, bitrate, seam: seam.checked ? { ...seam, image: seamImage } : null, warnings };
+    // A Draft takes HyperFrames' fast encode; a Final renders lossless frames for our own conversion.
+    const composition = relative(root, temp).replaceAll("\\", "/");
+    const source = final ? "png-sequence" : "video";
+    let input;
+    if (final) {
+      const frames = join(work, "frames");
+      await run(process.execPath, [hfBin, "render", root, "--composition", composition, "--format", "png-sequence", "--output", frames,
+        "--fps", String(fps), "--quiet"], quiet);
+      input = ["-framerate", String(fps), "-i", join(frames, "frame_%06d.png")];
+    } else {
+      const render = join(work, "render.mp4");
+      await run(process.execPath, [hfBin, "render", root, "--composition", composition, "--output", render,
+        "--fps", String(fps), "--crf", "10", "--quiet"], quiet);
+      input = ["-i", render];
+    }
+    const bitrate = await encodeRendition(input, output, { duration, maxBytes, work, quiet, frames: final });
+    return { output, ...size, duration, fps, bitrate, source, seam: seam.checked ? { ...seam, image: seamImage } : null, warnings };
   } finally {
     rmSync(temp, { force: true });
     rmSync(work, { recursive: true, force: true });

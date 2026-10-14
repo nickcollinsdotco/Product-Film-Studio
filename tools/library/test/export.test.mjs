@@ -15,7 +15,7 @@ const project = join(repo, "fixtures", "hold-loop");
 
 const listFiles = (dir) => readdirSync(dir, { recursive: true }).map((f) => relative(dir, join(dir, f))).sort();
 const probe = (file) => {
-  const r = spawnSync("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,codec_name,profile,pix_fmt,width,height,r_frame_rate:format=duration,size", "-of", "json", file], { encoding: "utf8" });
+  const r = spawnSync("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,codec_name,profile,pix_fmt,width,height,r_frame_rate,color_space,color_transfer,color_primaries:format=duration,size", "-of", "json", file], { encoding: "utf8" });
   const j = JSON.parse(r.stdout);
   return { ...j.streams[0], streams: j.streams.length, duration: Number(j.format.duration), size: Number(j.format.size) };
 };
@@ -78,14 +78,18 @@ test("every preset exports at its size, Draft at half; a custom size at full siz
   try {
     const names = [];
     for (const [name, size] of Object.entries(PRESETS)) {
-      const { output } = await exportLoop({ project, entry: "films/fixture/hold.html", size: name, length: 0.5, outDir, quiet: true });
+      const { output, source } = await exportLoop({ project, entry: "films/fixture/hold.html", size: name, length: 0.5, outDir, quiet: true });
+      assert.equal(source, "video", "a Draft keeps the fast path");
       const v = assertRendition(output);
       assert.deepEqual([v.width, v.height], [size.width / 2, size.height / 2], name);
       names.push(basename(output));
     }
-    const { output } = await exportLoop({ project, entry: "films/fixture/hold.html", size: "322x180", final: true, length: 0.5, outDir, quiet: true });
+    const { output, source } = await exportLoop({ project, entry: "films/fixture/hold.html", size: "322x180", final: true, length: 0.5, outDir, quiet: true });
+    assert.equal(source, "png-sequence", "a Final renders lossless frames");
     const v = assertRendition(output);
     assert.deepEqual([v.width, v.height], [322, 180]);
+    // A Final goes through lossless frames and an error-diffusion RGB→YUV conversion (vr-loops ticket 02), tagged BT.709.
+    assert.deepEqual([v.color_space, v.color_transfer, v.color_primaries], ["bt709", "bt709", "bt709"], "Final tagged BT.709");
     assert.equal(basename(output), "hold-322x180-final-0.5s.mp4");
     assert.deepEqual(readdirSync(outDir).sort(), [...names, basename(output)].sort(), "only the outputs are left");
     assert.deepEqual(listFiles(project), before, "the Project is unchanged after export");
