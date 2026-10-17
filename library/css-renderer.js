@@ -50,9 +50,7 @@
   // rasterises the Screen at its on-screen size: a scaled 3D layer is drawn at 1x
   // and only re-rasterised once it stops moving. The Camera puts Surface point
   // (cx, cy) at the frame's centre. `shadow` is how much of the shadow shows: all
-  // of it at zoom 1, none once the Surface fills the frame's width. A tilt pivots
-  // on the Camera's aim, the frame's centre (originX, originY from the Surface's
-  // top left), so a tilted close-up keeps the framing the Loop model gave it.
+  // of it at zoom 1, none once the Surface fills the frame's width.
   // Tilted, a Surface that fills the frame swings its edges into it, so it is
   // drawn up to OVERSCAN per degree larger, eased in as the shadow fades.
   function place(st, frame) {
@@ -63,13 +61,27 @@
     const Z = st.zoom * (1 + OVERSCAN * Math.abs(st.tilt || 0) * covers);
     const left = W / 2 + Z * (b.left - st.cx), top = H / 2 + Z * (b.top - st.cy);
     return {
-      left, top, originX: W / 2 - left, originY: H / 2 - top,
-      width: b.width * Z, height: b.height * Z,
+      left, top, width: b.width * Z, height: b.height * Z,
       bar: c.bar * Z, bezel: c.bezel * Z, viewportHeight: c.viewportHeight * Z,
       imageWidth: c.width * Z, imageHeight: c.imageHeight * Z, scroll: st.scroll * Z,
       radius: 14 * (b.width / 1400) * Z, perspective: W * 1.6 * Z,
       shadow: 1 - covers,
     };
+  }
+
+  // The tilted layer's transform. Chrome snaps a box's layout size and position
+  // to whole pixels, so a Surface moved by left/top and resized by width/height
+  // steps a pixel at a time and wobbles (vr-loops 03: ±0.4 px on a push-in).
+  // So the layer sits at 0,0 and is moved by a translate, and its snapped size
+  // (the rounded width and height) is scaled by a hair back to the true one; both
+  // are sub-pixel. A tilt pivots on the Camera's aim, the frame's centre, so a
+  // tilted close-up keeps the framing the Loop model gave it. `tilt` is the
+  // rotation's CSS, or "" when upright.
+  function transformOf(g, frame, tilt) {
+    const sx = g.width / Math.max(1, Math.round(g.width)), sy = g.height / Math.max(1, Math.round(g.height));
+    const move = `translate(${g.left - MARGIN * sx}px, ${g.top - MARGIN * sy}px) scale(${sx}, ${sy})`;
+    const [px, py] = [frame.width / 2, frame.height / 2];
+    return tilt ? `translate(${px}px, ${py}px) ${tilt} translate(${-px}px, ${-py}px) ${move}` : move;
   }
 
   // Layered: a tight contact shadow plus progressively wider, fainter ones, so the
@@ -118,8 +130,8 @@
     Object.assign(el.style, { position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", overflow: "hidden" });
 
     div(el, `position:absolute;inset:0;background:${css}`);
-    // The tilted layer: the face plus a transparent margin, turning about the Camera's aim.
-    const surface = div(el, `position:absolute;padding:${MARGIN}px;backface-visibility:hidden`);
+    // The tilted layer: the face plus a transparent margin, placed by transformOf.
+    const surface = div(el, `position:absolute;left:0;top:0;padding:${MARGIN}px;transform-origin:0 0;backface-visibility:hidden`);
     surface.className = "pfs-surface";
     // The face clips and rounds the Surface. No background: one would leak through
     // the anti-aliased rounded corners as a light fringe (except the phone's body).
@@ -131,8 +143,10 @@
     // Edges that coincide flicker at sub-pixel zoom: each is anti-aliased on its
     // own, so a background under the Screen's edge shows as a light sliver. The
     // page white behind a short Screen stops 1px inside the edges. The Screen
-    // shares the Surface's layer (no will-change).
-    const viewport = div(face, "position:absolute;left:0;right:0;bottom:0;overflow:hidden");
+    // shares the Surface's layer (no will-change). The viewport sits at 0,0 and is
+    // moved below the bar (and inside the bezel) by a translate, which isn't
+    // snapped to whole pixels as top/left are (see transformOf).
+    const viewport = div(face, "position:absolute;left:0;right:0;top:0;overflow:hidden");
     div(viewport, "position:absolute;inset:0 1px 1px;background:#fff");
     const img = el.ownerDocument.createElement("img");
     img.alt = "";
@@ -152,26 +166,26 @@
         boxShadow: [`inset 0 0 0 ${Math.max(1, w * 0.0027)}px #262626`, ...shadow(w, dark, g.shadow)].join(", "),
       });
       Object.assign(viewport.style, {
-        left: g.bezel + "px", right: g.bezel + "px", bottom: "auto", top: g.bezel + "px",
+        right: "auto", width: g.imageWidth + "px", height: g.viewportHeight + "px",
         borderRadius: w * 0.059 + "px", boxShadow: `0 0 0 ${Math.max(1, w * 0.0053)}px #404040`,
       });
     }
 
     return function draw(st) {
       const g = place(st, frame), bh = g.bar;
-      Object.assign(surface.style, { left: g.left - MARGIN + "px", top: g.top - MARGIN + "px", transformOrigin: `${g.originX + MARGIN}px ${g.originY + MARGIN}px` });
       Object.assign(face.style, {
         width: g.width + "px", height: g.height + "px", borderRadius: g.radius + "px",
         boxShadow: [...shadow(g.width, dark, g.shadow), `0 0 0 1px rgba(${dark ? "255,255,255,0.06" : "0,0,0,0.06"})`].join(", "),
       });
       Object.assign(bar.style, { display: bh ? "flex" : "none", height: bh + "px", gap: bh * 0.3 + "px", paddingLeft: bh * 0.55 + "px", borderBottom: `${Math.max(1.5, bh / 20)}px solid #dcdce0` });
       for (const b of buttons) Object.assign(b.style, { width: bh * 0.36 + "px", height: bh * 0.36 + "px" });
-      Object.assign(viewport.style, { top: bh + "px", height: g.viewportHeight + "px" });
+      // A browser viewport runs 1px past the face's bottom, which clips it, so its snapped height leaves no gap.
+      Object.assign(viewport.style, { height: g.viewportHeight + 1 + "px", transform: `translate(${g.bezel}px, ${bh + g.bezel}px)` });
       if (phone) phoneStyle(g);
       Object.assign(img.style, { width: g.imageWidth + "px", height: g.imageHeight + "px", transform: `translateY(${-g.scroll.toFixed(2)}px)` });
-      surface.style.transform = st.tilt ? tiltTransform(st.tilt, g.perspective, st.surface) : "none";
+      surface.style.transform = transformOf(g, frame, st.tilt ? tiltTransform(st.tilt, g.perspective, st.surface) : "");
     };
   }
 
-  root.CssRenderer = { mount, place };
+  root.CssRenderer = { mount, place, transformOf };
 })(globalThis);
