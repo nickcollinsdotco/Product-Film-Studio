@@ -76,6 +76,7 @@ test("a settings override is stamped on the Loop's root over its own settings, a
 });
 
 test("the Seam check reads the Loop's tilt from its settings", async () => {
+  sync(project);
   const html = readFileSync(join(project, "films", "fixture", "bookend.html"), "utf8");
   const temp = join(project, "films", "fixture", `.tilt-test-${process.pid}.html`);
   writeFileSync(temp, stampSettings(html, { tilt: 25 }));
