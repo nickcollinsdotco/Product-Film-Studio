@@ -21,3 +21,7 @@ Can a URL Loop show the page's own animations after it has loaded, rather than f
 - **Region.** Use a selector, or auto-detect the pixels that change between frames.
 - **Not covered by the shim:** web workers, `<video>` (which needs `currentTime` stepping) and WebGL running on its own clock.
 - **ADR-0006.** The clip is captured once and frozen like the still, so this should fit. Confirm before building.
+
+## Comments
+
+- 2026-10-18: There's a second route, from Center Stage: record a shared tab (`getDisplayMedia`). It covers WebGL, video and workers, which the clock shim can't, at the cost of realtime capture that can drop frames. Issue 10 built the tab share for stills and full pages; recording a clip from it is the natural next step if 09 is picked up.

@@ -44,7 +44,7 @@ function pruneUploads() {
   }
 }
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".png": "image/png", ".jpg": "image/jpeg", ".mp4": "video/mp4", ".json": "application/json" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".png": "image/png", ".jpg": "image/jpeg", ".mp4": "video/mp4", ".json": "application/json" };
 
 function composition({ width, height, duration, src, config }) {
   return template()
@@ -84,6 +84,18 @@ async function upload(buf) {
   }
   const { width, height } = await sharp(file, { limitInputPixels: false }).metadata();
   return { id, url: `/uploads/${id}.jpg`, w: width, h: height };
+}
+
+// A small copy of an upload, for the preset tiles (each decodes its own copy: a full-page image would be hundreds of MB).
+const smalls = new Map();
+async function small(name, width) {
+  const w = Math.min(960, Math.max(64, Number(width) || 480)), key = `${name}@${w}`;
+  if (!smalls.has(key)) {
+    const file = resolve(uploads, name);
+    if (!file.startsWith(uploads + sep) || !existsSync(file)) throw new Error("not found");
+    smalls.set(key, await sharp(file, { limitInputPixels: false }).resize({ width: w }).jpeg({ quality: 80 }).toBuffer());
+  }
+  return smalls.get(key);
 }
 
 // URL capture: the Library's (cookie banners and listed selectors hidden), sized by Screen viewport,
@@ -154,6 +166,8 @@ createServer(async (req, res) => {
     if (req.method === "GET" && p === "/") return send(res, 200, readFileSync(join(here, "app.html")), TYPES[".html"]);
     if (req.method === "GET" && p === "/composition.html")
       return send(res, 200, composition({ width: 1920, height: 1080, duration: 8, src: BLANK }), TYPES[".html"]);
+    if (req.method === "GET" && (p === "/stitch.js" || p === "/stitch.worker.js")) return serveFile(res, here, p.slice(1));
+    if (req.method === "GET" && p.startsWith("/uploads/") && url.searchParams.has("w")) return send(res, 200, await small(p.slice(9), url.searchParams.get("w")), TYPES[".jpg"]);
     if (req.method === "GET" && p.startsWith("/uploads/")) return serveFile(res, uploads, p.slice(9));
     if (req.method === "GET" && p.startsWith("/renders/")) return serveFile(res, out, p.slice(9));
     if (req.method === "POST" && p === "/capture") return send(res, 200, await capture(JSON.parse((await readBody(req)).toString())));

@@ -11,7 +11,7 @@
     "preview:poc": "hyperframes preview films/poc",
     "render:poc": "hyperframes render films/poc --output renders/poc.mp4",
     "quick": "node tools/quick-loop/server.mjs",
-    "test": "node --test tools/library/test/*.test.mjs",
+    "test": "node --test tools/library/test/*.test.mjs tools/quick-loop/test/*.test.mjs",
     "library:sync": "node tools/library/sync.mjs",
     "library:export": "node tools/library/export.mjs",
     "library:overlay": "node tools/library/overlay.mjs",

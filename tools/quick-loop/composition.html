@@ -262,7 +262,9 @@
         function apply(next) { cfg = { ...DEFAULTS, ...cfg, ...next }; layout(); paint(); }
 
         // duration: the whole Loop, the build intro included
-        window.quick = { apply, seek, get duration() { return cfg.duration + introLength(); }, get intro() { return introLength(); } };
+        // need: the widest the image is shown, in frame px (the card at full zoom), for the app's sharpness hint
+        window.quick = { apply, seek, get duration() { return cfg.duration + introLength(); }, get intro() { return introLength(); },
+          get need() { return geo ? Math.round(geo.cw * (geo.zoomTo ? geo.zoomTo.Z : 1)) : 0; } };
         window.addEventListener("hf-seek", (e) => seek(e.detail.time));
         apply(window.__quickConfig || {});
       })();

@@ -32,7 +32,32 @@ Mostly agrees with Steel Hat. Worth reading in full before writing our anti-patt
 - "The camera push is how a screen shot points at something": push to a focal point and back out. Because the push moves with the footage, it can't drift off its target the way an overlay can.
 - **Disagreement:** "no browser or OS chrome in frame", so they crop it off. We keep a browser frame because it says "website" at card size. Open question in Fog.
 
-## Borrow and steal (planned as issues)
+## Notes: React Bits Center Stage (reactbits.dev/tools/center-stage), reviewed 2026-10-18
+
+A free in-browser tool by David Haz: a screenshot, recording or shared tab, placed on 3D devices with tilt, depth of field, shadows and type. Exports 4K PNG, 4K60 MP4/WebM and GIF, plus a share link. Nick: "works really well".
+
+- **Licence: MIT + Commons Clause.** It bars offering the tools "or a substantially similar copy of them as a hosted service", ported versions included. A public URL Loop is exactly that, so **ideas only, no code** (stricter than snapcn's MIT). Nothing of theirs was copied; what we built is our own code.
+- **How it works:** all in the browser. A WebGL renderer drives the preview and the export alike; WebCodecs (mediabunny) encodes, gifenc does GIFs; no server. Capture uses `getDisplayMedia` on a tab, with Chrome's captured-surface control so a wheel over the live view scrolls the tab; an optional script on the user's own site drives the scroll and hides sticky bars; a worker stitches frames into a full page by matching pixels.
+- **Loops:** every motion is a periodic function of phase, so loops are seamless by construction; their scroll goes down and back, like our Bookend.
+- **Breadth:** about 60 presets (Galleries, Reveals, Devices, Isometric...) in groups, each showing 3 "hero" controls first.
+- **Competition:** it closes much of the gap we listed against snapcn (URL capture, scrolling page, loops). What we still have that it doesn't: a one-step URL capture with no share dance, a zoom to a chosen Focus area with a scroll limit, the Build intro, a checked Seam, cookie banners hidden, a site's light or dark theme.
+
+### Borrowed (issues 10-13, built 2026-10-18)
+
+| # | Item | Kind |
+|---|---|---|
+| 10 | Share a tab: grab one screen, or stitch the full page as it's scrolled | borrow idea, our own stitcher |
+| 11 | Presets that show only their 3 hero controls, with tiles that play the preset on your image | borrow |
+| 12 | Share link: the settings and image in the URL's hash | borrow |
+| 13 | Size hints, and a warning when the image is softer than the Loop shows it | borrow |
+
+### Avoid
+
+- The 3D device engine and its breadth (galleries, isometric, carousels): the same breadth trap as snapcn's.
+- Type behind the device (Loops are untitled, ADR-0010); grain on by default.
+- In-browser encoding for now: it conflicts with ADR-0001. Keep it as evidence for the hosting question in Fog (no server render costs) if URL Loop goes public.
+
+## Borrow and steal from snapcn (planned as issues)
 
 | # | Item | Kind | From |
 |---|---|---|---|
@@ -59,6 +84,8 @@ Mostly agrees with Steel Hat. Worth reading in full before writing our anti-patt
 
 ## Decisions so far
 
+- 2026-10-18: Nick: implement the Center Stage borrows (tab share, hero-control presets, share link, size hints). Built as issues 10-13; ideas only, no code (its licence bars a hosted copy).
+
 - 2026-10-13: Finish the v1 Library first, then try option B. Not an editor, not a component registry.
 - 2026-10-14: Keep the browser frame (no chrome-free option until someone asks). snapcn editor timing is optional, deferred behind 01.
 
@@ -67,4 +94,5 @@ Mostly agrees with Steel Hat. Worth reading in full before writing our anti-patt
 - Browser chrome in frame: keep the browser frame (recommended) or offer snapcn-style cropped, chrome-free framing as well?
 - Form: a hosted web app, a local tool or a CLI? Hosting means capture and rendering on a server (headless Chrome, HyperFrames, FFmpeg) and real running costs.
 - Whether to publish a Remotion `scroll-capture` component into snapcn's ecosystem (option C) as a cheap distribution probe. It splits the stack; revisit only if the X probe shows pull from Remotion users.
+- In-browser encoding (Center Stage's route) would remove server render costs if URL Loop is hosted, but it means leaving ADR-0001's renderer for exports. Only worth it if B goes public.
 - Live animations in a Capture (issue 09): the frame-stepped clock shim works on nickcollins.co. Still unknown: how it combines with scrolling, the loop seam, and picking the region. Deferred behind 01.
