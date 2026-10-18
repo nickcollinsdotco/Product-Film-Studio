@@ -41,6 +41,26 @@
       #time { font-variant-numeric: tabular-nums; color: var(--muted); width: 90px; }
       #status { color: var(--muted); max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       #status a { color: var(--accent); }
+      .hint.warn { color: #ffb020; }
+      #presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .preset { position: relative; padding: 0; overflow: hidden; border-radius: 8px; text-align: left; background: #111419; }
+      .preset.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+      .preset .thumb { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #0d1013; }
+      .preset iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; }
+      .preset span { display: block; padding: 5px 8px 6px; }
+      .preset small { display: block; color: var(--muted); font-size: 11px; }
+      .preset:disabled { opacity: .45; }
+      #hero:empty { display: none; }
+      #hero { display: flex; flex-direction: column; gap: 8px; }
+      details > summary { cursor: pointer; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+      details[open] > summary { margin-bottom: 14px; }
+      details > section + section { margin-top: 18px; }
+      #live { position: absolute; inset: 0; display: none; flex-direction: column; background: #0b0d10; z-index: 2; }
+      #live.on { display: flex; }
+      #live video { flex: 1; min-height: 0; width: 100%; object-fit: contain; }
+      #hud { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); }
+      #hud .note { color: var(--muted); flex: 1; }
+      #hud .note.warn { color: #ffb020; }
     </style>
   </head>
   <body>
@@ -53,10 +73,21 @@
         <input id="file" type="file" accept="image/*" hidden>
         <div class="row"><input id="url" type="text" placeholder="…or capture a URL"><select id="theme" title="Ask the site for its light or dark theme, for sites with a theme switch"><option value="">Site default</option><option value="light">Light</option><option value="dark">Dark</option></select><button id="capture">Capture</button></div>
         <input id="hide" type="text" placeholder="Hide on capture (CSS): .popup, #chat-widget" title="Comma-separated CSS selectors to hide. Common cookie banners are hidden automatically.">
+        <button id="share" title="Share a browser tab you already have open, logged-in apps included: grab what it shows, or scroll it to stitch the whole page">Share a tab…</button>
+        <div class="hint" id="sizehint"></div>
+        <div class="hint warn" id="sharp" hidden></div>
         <div id="picker"><div id="pickarea"><img id="thumb" alt=""><div id="box"></div><div id="limit"><span></span></div></div></div>
         <div class="hint" id="focushint" hidden>Drag on the image to set a focus area; drag the dashed line to set where scrolling stops. <button id="clearfocus">Clear focus</button></div>
       </section>
 
+      <section>
+        <h2>Preset</h2>
+        <div id="presets"></div>
+        <div id="hero"></div>
+      </section>
+
+      <details id="more">
+      <summary>All settings</summary>
       <section>
         <h2>Output</h2>
         <label><span>Name</span><input id="name" type="text" value="loop"></label>
@@ -113,14 +144,28 @@
         </label>
         <div class="hint" id="introhint">Build intro needs a captured URL: it traces the page's real layout.</div>
       </section>
+      </details>
     </aside>
 
     <main>
-      <div id="stagewrap"><iframe id="preview" src="/composition.html"></iframe></div>
+      <div id="stagewrap">
+        <iframe id="preview" src="/composition.html"></iframe>
+        <div id="live">
+          <video id="livevideo" muted playsinline></video>
+          <div id="hud">
+            <span class="note" id="livenote"></span>
+            <button id="grab" title="Use what the tab shows now, one screen">Grab this screen</button>
+            <button id="fullpage" class="primary" title="Stitch the whole page as you scroll it, top to bottom">Full page</button>
+            <button id="livedone" class="primary" hidden>Done</button>
+            <button id="livestop">Stop sharing</button>
+          </div>
+        </div>
+      </div>
       <footer>
         <button id="play">Pause</button>
         <input id="scrub" type="range" min="0" max="1" step="0.001" value="0">
         <span id="time"></span>
+        <button id="copylink" title="Copy a link that opens Quick Loop with this image and these settings (on this computer)">Copy link</button>
         <button id="render" class="primary" disabled>Render MP4</button>
         <span id="status"></span>
       </footer>
@@ -173,6 +218,8 @@
         if (quick()) { quick().apply({ ...cfg }); quick().seek(t); }
         $("introv").textContent = quick()?.intro ? `+${quick().intro.toFixed(1)}s` : "";
         $("render").disabled = !cfg.image;
+        hints();
+        thumbs();
       }
       // The agent texts sit beside the Screen: leave them room inside the frame.
       $("intro").addEventListener("input", () => { if ($("intro").value === "skeleton-texts" && +$("screenWidth").value > 0.62) $("screenWidth").value = 0.62; });
@@ -273,7 +320,245 @@
         }, 1000);
       };
 
+      // Size hints: what fits the Screen exactly, and a warning when the image is smaller than the Loop shows it.
+      const SIZES = {
+        "16:10": "Any width: tall full-page screenshots scroll. 2× captures (2880 px wide) stay sharp.",
+        "4:3": "An iPad screenshot in landscape (2732×2048 or 2420×1668) fits exactly; taller ones scroll.",
+        "9:19.5": "An iPhone 15–17 Pro screenshot (1179 or 1206 px wide) fits exactly; taller ones scroll.",
+        fill: "Any width: the Screen fills the frame's height and scrolls.",
+      };
+      function hints() {
+        $("sizehint").textContent = SIZES[cfg.viewport] || "";
+        const need = quick()?.need || 0, have = cfg.image?.w || 0;
+        $("sharp").hidden = !have || have >= need * 0.9;
+        $("sharp").textContent = `Soft at its largest: the Loop shows this image up to ${need} px wide and it is ${have} px. Use a 2× capture or a larger screenshot.`;
+      }
+
+      // Presets: a starting point each, showing only the three controls that matter for it (from React Bits' Center Stage).
+      // A preset sets the look and motion; the image, focus area, colour and output stay as they are.
+      const BASE = { backdrop: "glow", viewport: "16:10", frame: "browser", screenWidth: 0.72, radius: 14, tilt: 8, shadow: true,
+        focusMove: "scroll", scrollLimit: 1, loopBack: false, intro: "none" };
+      const PRESETS = [
+        { id: "glide", name: "Glide", note: "Scrolls down the page", set: {}, hero: ["duration", "scrollLimit", "swatches"] },
+        { id: "return", name: "Glide and return", note: "Seamless, back to the top", set: { loopBack: true }, hero: ["duration", "scrollLimit", "tilt"] },
+        { id: "zoom", name: "Zoom to detail", note: "Scroll, then zoom in", set: { focusMove: "end" }, hero: ["duration", "tilt", "screenWidth"] },
+        { id: "open", name: "Open on detail", note: "Zoomed in, pull out, scroll", set: { focusMove: "start" }, hero: ["duration", "scrollLimit", "tilt"] },
+        { id: "flat", name: "Flat", note: "No tilt, solid colour", set: { tilt: 0, backdrop: "solid", radius: 10 }, hero: ["duration", "swatches", "screenWidth"] },
+        { id: "phone", name: "Phone", note: "Phone Screen, no bar", set: { viewport: "9:19.5", frame: "none", radius: 40, tilt: 6, screenWidth: 0.5 }, hero: ["duration", "scrollLimit", "swatches"] },
+        { id: "build", name: "Agent build", note: "Needs a captured URL", set: { intro: "skeleton-texts", screenWidth: 0.62 }, hero: ["intro", "duration", "swatches"], needs: "layout" },
+      ];
+      let preset = null;
+      const block = (id) => (id === "swatches" ? $("swatches") : $(id).closest("label"));
+      const homes = new Map(); // hero block -> the placeholder where it lives under All settings
+      const setControl = (id, v) => { const el = $(id); if (el.type === "checkbox") el.checked = !!v; else el.value = v; };
+      function choosePreset(id, { keep = false } = {}) {
+        preset = PRESETS.find((p) => p.id === id) || PRESETS[0];
+        if (!keep) for (const [k, v] of Object.entries({ ...BASE, ...preset.set })) setControl(k, v);
+        homes.forEach((ph, el) => ph.replaceWith(el));
+        homes.clear();
+        for (const hid of preset.hero) {
+          const el = block(hid), ph = document.createComment(hid);
+          el.replaceWith(ph); homes.set(el, ph); $("hero").append(el);
+        }
+        document.querySelectorAll(".preset").forEach((b) => b.classList.toggle("on", b.dataset.id === preset.id));
+        update();
+      }
+      // Each tile plays its preset on the current image, small: a 480 px copy of the image in a 384 px wide frame.
+      // Hovering a tile plays it; otherwise it rests on a poster frame.
+      const TILE_W = 384;
+      PRESETS.forEach((p) => {
+        const b = document.createElement("button");
+        b.className = "preset"; b.dataset.id = p.id;
+        b.innerHTML = `<div class="thumb"><iframe tabindex="-1" src="/composition.html"></iframe></div><span>${p.name}<small>${p.note}</small></span>`;
+        b.onclick = () => choosePreset(p.id);
+        const f = b.querySelector("iframe");
+        f.onload = () => { f.ready = true; thumbs(); };
+        b.onmouseenter = () => (b.hover = performance.now());
+        b.onmouseleave = () => { b.hover = 0; f.key = null; thumbs(); };
+        $("presets").append(b);
+      });
+      function thumbs() {
+        const key = JSON.stringify([cfg.image?.url, cfg.focus, cfg.bg, cfg.width, cfg.height, cfg.duration]);
+        const H = Math.round(TILE_W * cfg.height / cfg.width);
+        document.querySelectorAll(".preset").forEach((b) => {
+          const p = PRESETS.find((x) => x.id === b.dataset.id), f = b.querySelector("iframe"), q = f.contentWindow?.quick;
+          b.disabled = p.needs === "layout" && !cfg.layout;
+          if (!f.ready || !q || key === f.key) return;
+          f.key = key;
+          const img = cfg.image;
+          q.apply({ ...cfg, ...BASE, ...p.set, width: TILE_W, height: H, intro: "none", layout: null,
+            image: img ? { url: img.url + "?w=480", w: 480, h: Math.round(img.h * 480 / img.w) } : null });
+          const box = b.querySelector(".thumb"), s = Math.min(box.clientWidth / TILE_W, box.clientHeight / H);
+          Object.assign(f.style, { width: TILE_W + "px", height: H + "px",
+            transform: `translate(${(box.clientWidth - TILE_W * s) / 2}px, ${(box.clientHeight - H * s) / 2}px) scale(${s})` });
+          q.seek(q.duration * 0.6); // the poster: most presets have arrived by here
+        });
+      }
+      (function playTiles(now) {
+        document.querySelectorAll(".preset").forEach((b) => {
+          const q = b.querySelector("iframe").contentWindow?.quick;
+          if (b.hover && q?.duration) q.seek(((now - b.hover) / 1000 + q.duration * 0.6) % q.duration);
+        });
+        requestAnimationFrame(playTiles);
+      })(performance.now());
+
+      // Share link: the image and every setting that differs from a fresh start, in the URL's hash (from Center Stage).
+      // The image lives in this computer's renders/quick/uploads, so the link opens here, not elsewhere.
+      const IDS = [...document.querySelectorAll("aside select, aside input")].filter((el) => el.id && el.type !== "file" && el.type !== "color").map((el) => el.id);
+      const value = (el) => (el.type === "checkbox" ? el.checked : el.value);
+      const fresh = Object.fromEntries(IDS.map((id) => [id, value($(id))]));
+      const b64 = (t) => btoa(String.fromCharCode(...new TextEncoder().encode(t))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      const unb64 = (v) => new TextDecoder().decode(Uint8Array.from(atob(v.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+      $("copylink").onclick = async () => {
+        const controls = Object.fromEntries(IDS.filter((id) => value($(id)) !== fresh[id]).map((id) => [id, value($(id))]));
+        const state = { v: 1, preset: preset?.id, bg: cfg.bg, image: cfg.image, focus: cfg.focus, controls };
+        const url = `${location.origin}/#loop=${b64(JSON.stringify(state))}`;
+        try { await navigator.clipboard.writeText(url); $("status").textContent = "Link copied"; }
+        catch { $("status").textContent = url; }
+      };
+      async function restore() {
+        const m = location.hash.match(/loop=([\w-]+)/);
+        if (!m) return false;
+        history.replaceState(null, "", location.pathname);
+        let state;
+        try { state = JSON.parse(unb64(m[1])); } catch { return false; }
+        choosePreset(state.preset, { keep: true });
+        const controls = state.controls || {};
+        for (const [id, v] of Object.entries(controls)) if ($(id)) setControl(id, v);
+        if (state.bg) pickBg(state.bg);
+        if (state.image?.url && (await fetch(state.image.url).catch(() => ({}))).ok) { // the preview loads it next anyway
+          cfg.layout = await fetch(state.image.url.replace(/\.jpg$/, ".layout.json")).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+          useImage(state.image, $("name").value);
+          // useImage starts a new image fresh; put back the link's scroll limit and focus area
+          if ("scrollLimit" in controls) setControl("scrollLimit", controls.scrollLimit);
+          if ("intro" in controls) setControl("intro", controls.intro);
+          if (state.focus) { cfg.focus = state.focus; drawBox(state.focus); }
+        } else if (state.image) $("drop").textContent = "The link's image isn't on this computer: drop it again";
+        update();
+        return true;
+      }
+
+      // Share a tab: the tab's live picture on the stage. Grab one screen, or stitch the whole page as it's
+      // scrolled (stitch.js, in a worker). Where Chrome allows it, scrolling over the live view scrolls the tab,
+      // and those wheel distances help the stitch across blank stretches. From React Bits' Center Stage.
+      let live = null;
+      const note = (text, warn) => { $("livenote").textContent = text; $("livenote").classList.toggle("warn", !!warn); };
+      const liveButtons = (stitching) => { $("grab").hidden = $("fullpage").hidden = stitching; $("livedone").hidden = !stitching; };
+      $("share").onclick = async () => {
+        if (!navigator.mediaDevices?.getDisplayMedia || !window.MediaStreamTrackProcessor) { $("drop").textContent = "Sharing a tab needs Chrome or Edge."; return; }
+        const controller = window.CaptureController ? new CaptureController() : null;
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { displaySurface: "browser", frameRate: { ideal: 30 } }, audio: false,
+            preferCurrentTab: false, selfBrowserSurface: "exclude", surfaceSwitching: "exclude", monitorTypeSurfaces: "exclude",
+            ...(controller ? { controller } : {}),
+          });
+        } catch (e) { if (e.name !== "NotAllowedError" && e.name !== "AbortError") $("drop").textContent = "Sharing failed: " + e.message; return; }
+        const forward = !!controller?.forwardWheel;
+        try { controller?.setFocusBehavior?.(forward ? "no-focus-change" : "focus-captured-surface"); } catch {}
+        const track = stream.getVideoTracks()[0];
+        live = { stream, track, controller, forward, css: null, wheel: 0, busy: false, stitching: false, worker: null };
+        $("livevideo").srcObject = stream;
+        $("live").classList.add("on"); // frames only flow to a video that's shown
+        liveButtons(false);
+        note("Connecting to the tab…");
+        await $("livevideo").play().catch(() => {});
+        // The track starts on a scaled default: ask for the tab's own size (sharpened to 2x once frames settle, below).
+        await track.applyConstraints({ resizeMode: "none", frameRate: { ideal: 30 } }).catch(() => {});
+        note(forward ? "Scroll here to move the tab. For a full page, start at its top." : "Scroll the page in its own tab. For a full page, start at its top.");
+        track.addEventListener("ended", () => (live?.stitching ? finishPage() : stopSharing()));
+        const reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
+        live.reader = reader;
+        (async () => {
+          for (;;) {
+            const { value: frame, done } = await reader.read().catch(() => ({ done: true }));
+            if (done) return;
+            if (live) live.frame = { displayWidth: frame.displayWidth, displayHeight: frame.displayHeight };
+            if (live && !live.sharpened) sharpen(live, frame);
+            if (live?.stitching && !live.busy && !live.finishing) {
+              live.busy = true;
+              const k = frame.displayWidth / live.css[0]; // frame px per CSS px of the tab
+              live.worker.postMessage({ type: "frame", frame, wheel: live.forward ? live.wheel * k : undefined }, [frame]);
+              live.wheel = 0;
+            } else frame.close();
+          }
+        })();
+      };
+      // Twice the tab's CSS size, so the Screen stays sharp when the Loop zooms: asked as a minimum width, Chrome
+      // renders the tab at that density rather than scaling its pixels up (an "ideal" size is ignored). Asked once
+      // the frame size has held for a moment: until then the track's settings are placeholders. Native if refused.
+      function sharpen(l, frame, force = false) {
+        l.seen = l.seen?.width === frame.displayWidth ? { width: l.seen.width, n: l.seen.n + 1 } : { width: frame.displayWidth, n: 0 };
+        // the tab's CSS size from its frames: their density as the track reports it once its settings agree with
+        // them, or meanwhile this window's (the same display, usually)
+        const set = l.track.getSettings(), agree = set.width === frame.displayWidth && set.screenPixelRatio;
+        const ratio = agree ? set.screenPixelRatio : window.devicePixelRatio || 1;
+        l.css = [frame.displayWidth / ratio, (frame.displayHeight || set.height) / ratio];
+        if (!force && (l.seen.n < 15 || !agree || l.stitching)) return;
+        l.sharpened = true;
+        if (ratio < 2) l.track.applyConstraints({ width: { min: Math.round(l.css[0] * 2) }, height: { min: Math.round(l.css[1] * 2) }, frameRate: { ideal: 30 } })
+          .catch(() => l.track.applyConstraints({ width: { min: Math.round(l.css[0] * 2) }, frameRate: { ideal: 30 } })).catch(() => {});
+      }
+      $("livevideo").addEventListener("wheel", (e) => {
+        if (!live) return;
+        live.wheel += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * (live.css?.[1] || innerHeight) : e.deltaY;
+      }, { passive: true });
+      function stopSharing() {
+        if (!live) return;
+        live.stream.getTracks().forEach((t) => t.stop());
+        live.reader?.cancel().catch(() => {});
+        live.worker?.terminate();
+        live = null;
+        $("livevideo").srcObject = null;
+        $("live").classList.remove("on");
+      }
+      $("livestop").onclick = stopSharing;
+      async function useBlob(blob, label) {
+        $("drop").textContent = "Uploading…";
+        cfg.layout = null; // a shared tab has no page structure to build from
+        useImage(await (await fetch("/upload", { method: "POST", body: blob })).json(), label);
+      }
+      $("grab").onclick = () => {
+        const v = $("livevideo"), c = document.createElement("canvas");
+        c.width = v.videoWidth; c.height = v.videoHeight;
+        c.getContext("2d").drawImage(v, 0, 0);
+        c.toBlob((blob) => { stopSharing(); useBlob(blob, "tab"); }, "image/png");
+      };
+      $("fullpage").onclick = async () => {
+        if (!live.sharpened) { // the stitch can't change size halfway: sharpen first and give the larger frames a moment
+          note("Getting ready… don't scroll yet.");
+          sharpen(live, live.frame, true);
+          await new Promise((r) => setTimeout(r, 700));
+        }
+        if (live.forward) await live.controller.forwardWheel($("livevideo")).catch(() => (live.forward = false));
+        live.worker = new Worker("/stitch.worker.js", { type: "module" });
+        live.worker.onmessage = ({ data }) => {
+          if (data.type === "progress") {
+            live.busy = false; live.progress = data; // (checks/share-tab.mjs reads it)
+            if (data.full) note("Page limit reached: press Done.", true);
+            else if (data.resized) note("The tab changed size, so its frames no longer fit: press Done, or stop and share it again.", true);
+            else if (data.lost) note("Lost the place: scroll back up a little, then on more slowly.", true);
+            else if (!data.moved) note(live.forward ? "Ready: scroll here, top to bottom, then press Done." : "Ready: scroll the page in its tab, top to bottom, then press Done.");
+            else note(`Stitched ${data.height.toLocaleString()} px. Scroll to the bottom, then press Done.`);
+          } else if (data.type === "done") { stopSharing(); useBlob(data.blob, "tab-page"); }
+          else if (data.type === "error") { note("Stitch failed: " + data.message, true); live.busy = false; }
+        };
+        live.worker.postMessage({ type: "start", maxHeight: 24000 });
+        live.stitching = true; live.wheel = 0;
+        liveButtons(true);
+        note("Getting ready… don't scroll yet."); // the first frame, at the top of the page, has to land first
+      };
+      function finishPage() {
+        if (!live?.worker || live.finishing) return;
+        live.finishing = true;
+        note("Joining the page…");
+        live.worker.postMessage({ type: "finish" });
+      }
+      $("livedone").onclick = finishPage;
+
       pickBg(COLORS[0]);
+      $("preview").addEventListener("load", async () => { if (!(await restore())) choosePreset("glide"); }, { once: true });
     </script>
   </body>
 </html>
