@@ -6,7 +6,7 @@ import "../../../library/loop-model.js";
 import "../../../library/css-renderer.js";
 
 const { sceneAt } = globalThis.LoopModel;
-const { place } = globalThis.CssRenderer;
+const { place, transformOf } = globalThis.CssRenderer;
 
 const frame = { width: 1600, height: 900 };
 const screen = { w: 1440, h: 2400 };
@@ -44,4 +44,26 @@ test("the shadow fades from full at zoom 1 to none once the Surface fills the fr
   near(place(stateOf({ zoom: fill * 1.5 }), frame).shadow, 0, "past filled");
   const mid = place(stateOf({ zoom: (1 + fill) / 2 }), frame).shadow;
   assert.ok(mid > 0 && mid < 1, `half way: ${mid}`);
+});
+
+test("the Surface is placed by a sub-pixel transform: a translate, and a hair of scale from its snapped size to its true one", () => {
+  const st = stateOf({ zoom: 1.37, cx: 700, cy: 380 }), g = place(st, frame);
+  const t = transformOf(g, frame, "");
+  const [, x, y, sx, sy] = t.match(/^translate\(([-\d.e]+)px, ([-\d.e]+)px\) scale\(([-\d.e]+), ([-\d.e]+)\)$/).map(Number);
+  near(Math.round(g.width) * sx, g.width, "true width"); near(Math.round(g.height) * sy, g.height, "true height");
+  near(x + 2 * sx, g.left, "face left"); near(y + 2 * sy, g.top, "face top");
+});
+
+test("a tilt pivots on the Camera's aim, so a tilted close-up keeps its framing", () => {
+  const g = place(stateOf({ zoom: 2, cx: 500, cy: 300, tilt: 8 }), frame);
+  assert.match(transformOf(g, frame, "rotateY(-8deg)"), /^translate\(800px, 450px\) rotateY\(-8deg\) translate\(-800px, -450px\) translate\(/);
+});
+
+test("a tilted Surface that fills the frame is drawn a little larger, so its tilted edges stay out of frame", () => {
+  const fill = frame.width / stateOf().surface.bounds.width;
+  const filled = { zoom: fill * 1.2, cx: 600, cy: 400 };
+  const flat = place(stateOf(filled), frame), tilted = place(stateOf({ ...filled, tilt: 8 }), frame);
+  assert.ok(tilted.width > flat.width * 1.02, `${tilted.width} vs ${flat.width}`);
+  // At zoom 1 a tilt changes nothing but the angle: the Backdrop shows round the Surface anyway.
+  near(place(stateOf({ tilt: 8 }), frame).width, place(stateOf(), frame).width, "zoom 1");
 });

@@ -104,7 +104,7 @@ Shapes. Pick one:
 Every Loop closes with a seam from its last Shot back to its first: a cut by default, a dissolve allowed.
 
 Shot templates, taken from the reference clips. v1 has Scroll and Hold only; Reveal, Drift and Orbit come later. Leave the card's field blank and each Shot's template is inferred: a Shot that moves down a tall Screen and lands on an area (optionally zooming in) is a Scroll; one that stays on one area (whole included) is a Hold. A sideways move between two areas without scrolling isn't in v1 (it would be a Drift): name a different path. Name a template to override:
-- Hold: ends on one area with one slow move, including a push-in from whole or a pull-out to it. The default Shot.
+- Hold: ends on one area with one slow move, including a push-in from whole or a pull-out to it. The default Shot. Its push-settle move pushes in on an area until it fills a chosen share of the frame and stays still on it (at least 1s); its return move goes back to the opening framing. A one-area Bookend is a push-settle then a return.
 - Reveal: open on a fragment (a corner, an edge, a dark screen) and push or pull until the whole view is there. Never inferred, because a fragment isn't a named area: name it in Shot templates. Only after a cut, never as a Loop's first Shot.
 - Drift: passes through two or more named areas on a tilted plane, shallow focus, focus racking between them. (Evil Charts)
 - Scroll: tilted page scrolls past; the product's own section headings act as titles. (Vercel, Steel Hat)
@@ -129,6 +129,7 @@ Worked example, adapted from the TLDR reference:
 - **Shot templates:**
 - **Device frame:** project default
 - **Look:** project default
+- **Tilt:** 0°
 - **Primary frame size:** 16:9
 - **Other frame sizes:**
 - **Length:** 8 to 12s
@@ -138,6 +139,7 @@ Notice: the one thing a viewer should take away, in a short line. If you cannot 
 Focus path: 2 to 4 focus areas of the Screen, in order. `→` moves within a Shot; `/` cuts to the next Shot. Name what is there ("leaderboard", "Pro card"), not coordinates; `whole` is the full Screen and never needs drawing. A Bookend starts and ends on the same area, usually whole.
 Shape: Bookend or Tour.
 Shot templates: optional, one per Shot. Leave blank to infer them from the focus path.
+Tilt: held for the whole Loop (at most 20° either way), so a tilted Bookend's seam joins identical framings. Draft at 0° and 8° to choose.
 Primary frame size: the size the Loop's source previews at in Studio and exports at by default. Set it explicitly; it isn't taken from list order.
 Other frame sizes: further presets to export (16:9, 9:16, 1:1, 4:5, 4:3, or custom). The Shot templates lay the Loop out for each; there are no per-ratio Shots in v1. In portrait, a browser frame's viewport grows to fill the height.
 Text: add a "Text:" line only if the Loop needs a word the UI does not already say.

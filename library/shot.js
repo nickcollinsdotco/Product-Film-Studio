@@ -59,7 +59,7 @@
     // The Loop's own settings (data-settings on its entry root) override the Project's.
     const settings = root.ProjectSettings.resolve(JSON.parse(host.parentElement.getAttribute("data-settings") || "{}"));
     const shots = shotsOf(host);
-    const planned = root.LoopModel.plan({ frame, screen, shots, deviceFrame: settings.deviceFrame });
+    const planned = root.LoopModel.plan({ frame, screen, shots, deviceFrame: settings.deviceFrame, tilt: settings.tilt });
     const mine = planned.find((p) => p.shot.host === host);
     if (!mine) throw new Error("Shot: its host clip isn't among the Loop's Shot clips");
 

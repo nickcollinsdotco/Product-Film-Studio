@@ -6,9 +6,10 @@
 // (ADR-0011 as amended): a failure blocks a Final render and warns on a Draft.
 // Tours skip it. The Loop's shape is data-loop-shape on its entry root.
 // Usage: node tools/library/export.mjs <project-dir> <loop-entry> --draft|--final
-//          [--size <preset>|<W>x<H>] [--length <seconds>] [--fps <rate>]
+//          [--size <preset>|<W>x<H>] [--length <seconds>] [--fps <rate>] [--tilt <degrees>]
 //   e.g. node tools/library/export.mjs fixtures/hold-loop films/fixture/hold.html --draft --size Story
 // Size defaults to the Loop's primary Frame size; a Draft renders at half of it.
+// --tilt overrides the Loop's constant tilt, so one entry drafts at 0° and 8° (vr-loops 03).
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -81,6 +82,17 @@ export function scaleLength(html, length) {
     tag.replace(/(data-(?:start|duration)=")([^"]*)"/g, (_, attr, v) => `${attr}${scaled(v)}"`));
 }
 
+// Stamps settings over the Loop's own (data-settings on its entry root), as a Loop's settings override the Project's.
+const escapeAttr = (v) => v.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+const unescapeAttr = (v) => v.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+export function stampSettings(html, overrides) {
+  return html.replace(/<div\b[^>]*data-composition-id[^>]*>/, (tag) => {
+    const own = tag.match(/ data-settings="([^"]*)"/);
+    const attr = ` data-settings="${escapeAttr(JSON.stringify({ ...(own ? JSON.parse(unescapeAttr(own[1])) : {}), ...overrides }))}"`;
+    return own ? tag.replace(own[0], attr) : tag.replace(/^<div\b/, `<div${attr}`);
+  });
+}
+
 // The Rendition's video bitrate: 5 Mbps unless the Loop is too long to fit the limit at it.
 export function renditionBitrate(duration, maxBytes = RENDITION_LIMIT) {
   return Math.min(RENDITION_BITRATE, Math.floor((maxBytes * 8 * HEADROOM) / duration));
@@ -126,7 +138,7 @@ async function encodeRendition(input, output, { duration, maxBytes, work, quiet,
   return bitrate;
 }
 
-export async function exportLoop({ project, entry, size: sizeSpec, length, fps = DEFAULT_FPS, final = false, outDir, maxBytes = RENDITION_LIMIT, quiet = false }) {
+export async function exportLoop({ project, entry, size: sizeSpec, length, tilt, fps = DEFAULT_FPS, final = false, outDir, maxBytes = RENDITION_LIMIT, quiet = false }) {
   const root = resolve(project);
   const entryPath = resolve(root, entry);
   if (!existsSync(entryPath)) throw new Error(`No Loop entry at ${entryPath}`);
@@ -136,19 +148,20 @@ export async function exportLoop({ project, entry, size: sizeSpec, length, fps =
   const html = readFileSync(entryPath, "utf8");
   const fullSize = sizeSpec ? frameSize(sizeSpec) : primaryFrameSize(html);
   const size = final ? fullSize : { width: even(fullSize.width / 2), height: even(fullSize.height / 2) };
+  if (tilt != null && !Number.isFinite(tilt)) throw new Error(`Tilt ${tilt}: use a number of degrees`);
   const timedHtml = length != null ? scaleLength(html, length) : html;
   const duration = loopDuration(timedHtml);
   const loop = basename(entryPath, ".html");
   const out = resolve(outDir || join(repo, "renders", "library", basename(root)));
   mkdirSync(out, { recursive: true });
-  // Length and frame rate join the name only when overridden, so no two exports share one.
-  const name = [loop, `${size.width}x${size.height}`, final ? "final" : "draft", length != null && `${duration}s`, fps !== DEFAULT_FPS && `${fps}fps`].filter(Boolean).join("-");
+  // Length, frame rate and tilt join the name only when overridden, so no two exports share one.
+  const name = [loop, `${size.width}x${size.height}`, final ? "final" : "draft", length != null && `${duration}s`, fps !== DEFAULT_FPS && `${fps}fps`, tilt != null && `tilt${tilt}`].filter(Boolean).join("-");
   const output = join(out, `${name}.mp4`);
 
   // Next to the entry, so its paths resolve exactly as the entry's do.
   const temp = join(dirname(entryPath), `.${loop}.export-${process.pid}-${Date.now()}.html`);
   const work = mkdtempSync(join(tmpdir(), "library-export-"));
-  writeFileSync(temp, stampSize(timedHtml, size));
+  writeFileSync(temp, stampSize(tilt != null ? stampSettings(timedHtml, { tilt }) : timedHtml, size));
   try {
     // The Seam check, before anything renders.
     const warnings = [];
@@ -170,7 +183,7 @@ export async function exportLoop({ project, entry, size: sizeSpec, length, fps =
       ...(final ? ["--format", "png-sequence"] : ["--crf", "10"])], quiet);
     const input = final ? ["-framerate", String(fps), "-i", join(rendered, "frame_%06d.png")] : ["-i", rendered];
     const bitrate = await encodeRendition(input, output, { duration, maxBytes, work, quiet, fromFrames: final });
-    return { output, ...size, duration, fps, bitrate, source, seam: seam.checked ? { ...seam, image: seamImage } : null, warnings };
+    return { output, ...size, duration, fps, tilt, bitrate, source, seam: seam.checked ? { ...seam, image: seamImage } : null, warnings };
   } finally {
     rmSync(temp, { force: true });
     rmSync(work, { recursive: true, force: true });
@@ -178,10 +191,10 @@ export async function exportLoop({ project, entry, size: sizeSpec, length, fps =
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const usage = "Usage: node tools/library/export.mjs <project-dir> <loop-entry> --draft|--final [--size <preset>|<W>x<H>] [--length <seconds>] [--fps <rate>]";
+  const usage = "Usage: node tools/library/export.mjs <project-dir> <loop-entry> --draft|--final [--size <preset>|<W>x<H>] [--length <seconds>] [--fps <rate>] [--tilt <degrees>]";
   let args;
   try {
-    args = parseArgs({ allowPositionals: true, options: { draft: { type: "boolean" }, final: { type: "boolean" }, size: { type: "string" }, length: { type: "string" }, fps: { type: "string" } } });
+    args = parseArgs({ allowPositionals: true, options: { draft: { type: "boolean" }, final: { type: "boolean" }, size: { type: "string" }, length: { type: "string" }, fps: { type: "string" }, tilt: { type: "string" } } });
   } catch (e) {
     console.error(`${e.message}\n${usage}`);
     process.exit(1);
@@ -191,7 +204,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     console.error(usage);
     process.exit(1);
   }
-  exportLoop({ project, entry, final: !!v.final, size: v.size, length: v.length != null ? Number(v.length) : undefined, fps: v.fps != null ? Number(v.fps) : DEFAULT_FPS })
+  exportLoop({ project, entry, final: !!v.final, size: v.size, length: v.length != null ? Number(v.length) : undefined, fps: v.fps != null ? Number(v.fps) : DEFAULT_FPS, tilt: v.tilt != null ? Number(v.tilt) : undefined })
     .then((r) => {
       if (r.seam?.pass) console.log(`Seam check passed; check it by eye: ${r.seam.image}`);
       console.log(`${v.final ? "Final" : "Draft"} ${r.width}x${r.height}, ${r.duration}s @ ${r.fps}fps, ${Math.round(r.bitrate / 1000)} kbps -> ${r.output}`);

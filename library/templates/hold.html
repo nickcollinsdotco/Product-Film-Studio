@@ -2,8 +2,14 @@
 <!--
   Hold Shot template: stays on one Focus area with one slow move.
   Variables: screen (path), screenWidth, screenHeight (px), focus (a Focus area
-  name, default "whole"), move ("push-in" | "pull-out" | "tilt-settle"), tilt
-  (degrees a tilt settle opens on, 8 by default, at most 20 either way).
+  name, default "whole"), move ("push-in" | "pull-out" | "tilt-settle" |
+  "push-settle" | "return"), tilt (degrees a tilt settle opens on, 8 by default,
+  at most 20 either way), fill (how much of the frame's width or height the
+  Focus area fills once pushed in, 0.72 by default).
+  push-settle pushes in on the Focus area and stays still on it for the Shot's
+  last 40%, never under 1s; return goes back to the area's framing. A Bookend is
+  a push-settle then a return. A Loop's constant tilt is data-settings `tilt` on
+  its entry root.
   The Loop entry loads gsap, the Project settings and the Library before this runs.
 -->
 <html lang="en" data-composition-variables='[
@@ -12,7 +18,8 @@
   {"id":"screenHeight","type":"number","label":"Screen height","default":900},
   {"id":"focus","type":"string","label":"Focus area","default":"whole"},
   {"id":"move","type":"string","label":"Move","default":"push-in"},
-  {"id":"tilt","type":"number","label":"Tilt settle from (degrees)","default":8}
+  {"id":"tilt","type":"number","label":"Tilt settle from (degrees)","default":8},
+  {"id":"fill","type":"number","label":"Pushed-in area fills","default":0.72}
 ]'>
   <head>
     <meta charset="UTF-8">
